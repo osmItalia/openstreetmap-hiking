@@ -57,7 +57,7 @@ Map {
     [zoom >= 17] {
         text-size: 6;
         text-halo-radius: 1.0;
-        text-spacing: 50;
+        text-spacing: 75;
     }
   }
 }
@@ -76,7 +76,6 @@ Map {
                 "Droid Sans Fallback Regular", "Unifont Medium", "unifont Medium";
 
 
-@water-color: #c0f0f0;
 @land-color: #f2efe9;
 
 #color-relief {
