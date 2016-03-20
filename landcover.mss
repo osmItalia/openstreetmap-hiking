@@ -486,33 +486,33 @@
   [way_pixels > 100][zoom >= 7] {
     [zoom < 10] {
       ::fill {
-        opacity: 0.05;
+        opacity: 0.15;
         polygon-fill: green;
       }
     }
-    a/line-width: 1;
+    a/line-width: 1.5;
     a/line-offset: -0.5;
     a/line-color: green;
-    a/line-opacity: 0.25;
+    a/line-opacity: 0.35;
     a/line-join: round;
     a/line-cap: round;
     a/line-dasharray: 20, 5;
-    b/line-width: 1;
-    b/line-offset: -1;
+    b/line-width: 1.5;
+    b/line-offset: -1.5;
     b/line-color: green;
-    b/line-opacity: 0.15;
+    b/line-opacity: 0.25;
     b/line-join: round;
     b/line-cap: round;
     b/line-dasharray: 20, 5;
     [zoom >= 10] {
-      a/line-width: 2;
-      a/line-offset: -1;
-      b/line-width: 4;
-      b/line-offset: -2;
-    }
-    [zoom >= 14] {
+      a/line-width: 3;
+      a/line-offset: -1.5;
       b/line-width: 6;
       b/line-offset: -3;
+    }
+    [zoom >= 14] {
+      b/line-width: 8;
+      b/line-offset: -4;
     }
   }
 }
