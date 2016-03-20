@@ -1,4 +1,4 @@
-@amenity-brown: #734a08;
+@amenity-brown: #443f37;
 @amenity-red: #ff0000;
 @amenity-blu: #7272ff;
 @standard-wrap-width: 30;
@@ -577,10 +577,7 @@
         text-dx: 1;
     }
   }
-  [natural = 'peak'],
-  [natural = 'volcano'],
-  [mountain_pass = 'yes'],
-  [natural = 'saddle'] {
+  [natural = 'peak'] {
     [zoom >= 14][name != null]{
       text-name: "[name]";
       [ele != null] {
@@ -593,6 +590,56 @@
       [zoom >= 16]{
         text-size: 10;
 	  }
+      text-fill: @amenity-brown;
+      text-dy: 5;
+      text-dx: 5;
+      text-face-name: @book-fonts;
+      text-halo-radius: @radius-avg;
+      text-halo-fill: rgba(255,255,255,0.9);
+      text-wrap-width: @standard-wrap-width;
+      text-placement-type: simple;
+      text-placements: 'N';
+      text-allow-overlap: true;
+      [ldir >= 22.5][ldir < 67.5] {
+        text-placements: 'NE,N,E';
+        text-dy: 1;
+        text-dx: 1;
+      }
+      [ldir >= 67.5][ldir < 112.5] { text-placements: 'E,NE,SE'; }
+      [ldir >= 112.5][ldir < 157.5] {
+        text-placements: 'SE,E,S';
+        text-dy: 1;
+        text-dx: 1;
+      }
+      [ldir >= 157.5][ldir < 202.5] { text-placements: 'S,SE,SW'; }
+      [ldir >= 202.5][ldir < 247.5] {
+        text-placements: 'SW,S,W';
+        text-dy: 1;
+        text-dx: 1;
+      }
+      [ldir >= 247.5][ldir < 292.5] { text-placements: 'W,SW,NW'; }
+      [ldir >= 292.5][ldir < 337.5] {
+        text-placements: 'NW,N,W';
+        text-dy: 1;
+        text-dx: 1;
+      }
+    }
+  }
+  [natural = 'volcano'],
+  [mountain_pass = 'yes'],
+  [natural = 'saddle'] {
+    [zoom >= 14][name != null]{
+      text-name: "[name]";
+      [ele != null] {
+        text-name: "[name] + ' ' + [ele] + 'm'";
+      }
+      text-size: 6;
+      [zoom >= 16]{
+        text-size: 8;
+      }
+      [zoom >= 18]{
+        text-size: 10;
+      }
       text-fill: @amenity-brown;
       text-dy: 5;
       text-dx: 5;
@@ -673,7 +720,54 @@
         text-dx: 1;
     }
   }
-  [natural = 'peak'],
+  [natural = 'peak'] {
+    [zoom >= 14][name != null]{
+      text-name: "[name]";
+      [ele != null] {
+        text-name: "[name] + ' ' + [ele] + 'm'";
+      }
+      text-size: 6;
+      [zoom >= 16]{
+        text-size: 8;
+      }
+      [zoom >= 18]{
+        text-size: 10;
+      }
+      text-fill: @amenity-brown;
+      text-dy: 5;
+      text-dx: 5;
+      text-face-name: @book-fonts;
+      text-halo-radius: @radius-avg;
+      text-halo-fill: rgba(255,255,255,0.9);
+      text-wrap-width: @standard-wrap-width;
+      text-placement-type: simple;
+      text-placements: 'N';
+      text-allow-overlap: true;
+      [ldir >= 22.5][ldir < 67.5] {
+        text-placements: 'NE,N,E';
+        text-dy: 1;
+        text-dx: 1;
+      }
+      [ldir >= 67.5][ldir < 112.5] { text-placements: 'E,NE,SE'; }
+      [ldir >= 112.5][ldir < 157.5] {
+        text-placements: 'SE,E,S';
+        text-dy: 1;
+        text-dx: 1;
+      }
+      [ldir >= 157.5][ldir < 202.5] { text-placements: 'S,SE,SW'; }
+      [ldir >= 202.5][ldir < 247.5] {
+        text-placements: 'SW,S,W';
+        text-dy: 1;
+        text-dx: 1;
+      }
+      [ldir >= 247.5][ldir < 292.5] { text-placements: 'W,SW,NW'; }
+      [ldir >= 292.5][ldir < 337.5] {
+        text-placements: 'NW,N,W';
+        text-dy: 1;
+        text-dx: 1;
+      }
+    }
+  }
   [natural = 'volcano'],
   [mountain_pass = 'yes'],
   [natural = 'saddle'] {
