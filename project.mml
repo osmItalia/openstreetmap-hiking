@@ -419,7 +419,7 @@
       "id": "route-tunnels",
       "srs": "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs",
       "Datasource": {
-        "table": "(SELECT way,\n   (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, \n network, ref, name, bicycle, horse \n FROM ( \n SELECT \n way, ('highway_' || highway) AS feature, network, ref, name, bicycle, horse \n   FROM sentieri \n    WHERE (tunnel = 'yes' OR tunnel = 'building_passage' OR covered = 'yes') AND operator = 'Società degli Alpinisti Tridentini') as query) as routetunnels",
+        "table": "(SELECT way,\n   (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, \n network, ref, name, bicycle, horse \n FROM ( \n SELECT \n way, ('highway_' || highway) AS feature, network, ref, name, bicycle, horse \n   FROM sentieri \n    WHERE (tunnel = 'yes' OR tunnel = 'building_passage' OR covered = 'yes')) as query) as routetunnels",
         "geometry_field": "way",
         "type": "postgis",
         "key_field": "",
@@ -668,7 +668,7 @@
       "id": "route",
       "srs": "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs",
       "Datasource": {
-        "table": "(SELECT way,\n   (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, \n network, ref, name, bicycle, horse \n FROM ( \n SELECT \n way, ('highway_' || highway) AS feature, (CASE WHEN network IN ('iwn', 'nwn', 'rwn', 'lwn') THEN network ELSE NULL END) as network, ref, name, bicycle, horse \n   FROM sentieri \n    WHERE (tunnel IS NULL OR NOT tunnel IN ('yes', 'building_passage'))\n        AND (covered IS NULL OR NOT covered = 'yes')\n        AND (bridge IS NULL OR NOT bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct') AND operator = 'Società degli Alpinisti Tridentini')) \n as query) as route",
+        "table": "(SELECT way,\n   (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, \n network, ref, name, bicycle, horse \n FROM ( \n SELECT \n way, ('highway_' || highway) AS feature, (CASE WHEN network IN ('iwn', 'nwn', 'rwn', 'lwn') THEN network ELSE NULL END) as network, ref, name, bicycle, horse \n   FROM sentieri \n    WHERE (tunnel IS NULL OR NOT tunnel IN ('yes', 'building_passage'))\n        AND (covered IS NULL OR NOT covered = 'yes')\n        AND (bridge IS NULL OR NOT bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct'))) \n as query) as route",
         "geometry_field": "way",
         "type": "postgis",
         "key_field": "",
@@ -948,7 +948,7 @@
       "id": "route-bridges",
       "srs": "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs",
       "Datasource": {
-        "table": "(SELECT way, (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, network, ref, name, bicycle, horse FROM ( SELECT way, ('highway_' || highway) AS feature, network, ref,name, bicycle, horse  FROM sentieri  WHERE bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct')  AND operator = 'Società degli Alpinisti Tridentini') as query) AS bridges",
+        "table": "(SELECT way, (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, network, ref, name, bicycle, horse FROM ( SELECT way, ('highway_' || highway) AS feature, network, ref,name, bicycle, horse  FROM sentieri  WHERE bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct')) as query) AS bridges",
         "geometry_field": "way",
         "type": "postgis",
         "key_field": "",
