@@ -1,4 +1,4 @@
-@route-width:               0.7;
+@route-width:               0.5;
 
 .route-bridges-casing, .route-tunnels-casing {
   ::casing {
