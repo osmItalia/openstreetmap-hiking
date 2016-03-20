@@ -6,9 +6,9 @@ Map {
 }
 
 
-#hill-shade { raster-opacity: 0.6; }
+#hill-shade { raster-opacity: 0.5; }
 #slope-shape { raster-opacity: 0.5; }
-#color-relief { raster-opacity: 0.4; }
+#color-relief { raster-opacity: 0.5; }
 
 #color-relief,
 #slope-shade,
@@ -16,6 +16,7 @@ Map {
     raster-scaling: bilinear;
     // note: in TileMill 0.9.x and earlier this is called raster-mode
     raster-comp-op: multiply;
+    raster-opacity: 0.5;
 }
 
 
@@ -49,14 +50,14 @@ Map {
     text-face-name: @book-fonts;
     text-fill: darken(@label-color, 15%);
     text-size: 4;
-    text-spacing: 200;
     text-placement: line;
     text-halo-radius: 0.5;
+    text-spacing: 50;
     text-halo-fill: rgba(255,255,255,0.8);
     [zoom >= 17] {
-    text-size: 6;
-    text-halo-radius: 1.0;
-    text-spacing: 250;
+        text-size: 6;
+        text-halo-radius: 1.0;
+        text-spacing: 50;
     }
   }
 }
