@@ -377,19 +377,19 @@
             line/line-color: #000000;
         }
         [trail_visibility = 'intermediate'] {
-            line/line-color: #595f5b;
+            line/line-color: #595f5a;
         }
         [trail_visibility = 'bad'],[trail_visibility = 'no'],[trail_visibility = 'horrible']{
-            line/line-color: #b2beb5;
+            line/line-color: #617265;
         }
         [sac_scale = 'hiking'] {
-            line/line-dasharray: 12,4;
+            line/line-dasharray: 8,2;
         }
         [sac_scale = 'mountain_hiking'],[sac_scale = 'demanding_mountain_hiking'] {
-            line/line-dasharray: 9,4;
+            line/line-dasharray: 6,2;
         }
         [sac_scale = 'alpine_hiking'] {
-            line/line-dasharray: 4,3;
+            line/line-dasharray: 4,2;
         }
         [sac_scale = 'demanding_alpine_hiking'],[sac_scale = 'difficult_alpine_hiking'] {
             line/line-dasharray: 2,2;
