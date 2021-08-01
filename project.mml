@@ -16,17 +16,17 @@
   "maxzoom": 22,
   "srs": "+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs",
   "Stylesheet": [
-    "style.mss",
-    "water.mss",
-    "landcover.mss",
-    "building.mss",
-    "aerialways.mss",
-    "power.mss",
-    "placenames.mss",
-    "roads.mss",
-    "path.mss",
-    "route.mss",
-    "pois.mss"
+    "style/style.mss",
+    "style/water.mss",
+    "style/landcover.mss",
+    "style/building.mss",
+    "style/aerialways.mss",
+    "style/power.mss",
+    "style/placenames.mss",
+    "style/roads.mss",
+    "style/path.mss",
+    "style/route.mss",
+    "style/pois.mss"
   ],
   "Layer": [
     {
