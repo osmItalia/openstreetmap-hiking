@@ -185,7 +185,9 @@ Layer:
     Datasource:
         <<: *osm2pgsql
         table: (SELECT
-                 wkb_geometry from contour
+                 wkb_geometry
+                 from contour
+                 where elev::numeric % 500. != 0
                 ) AS contour
         geometry_field: wkb_geometry
     geometry: linestring
@@ -194,7 +196,7 @@ Layer:
     Datasource: 
         <<: *osm2pgsql
         table: (SELECT
-                 wkb_geometry, elev::integer
+                 wkb_geometry   
                  from contour
                  where elev::numeric % 500. = 0
                ) AS contour_major
@@ -659,6 +661,26 @@ Layer:
         ) AS turning_circle_sql
     properties:
       minzoom: 15
+  - id: route
+    geometry: linestring
+    Datasource: 
+        table: (SELECT geom,
+                 (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, 
+               network, ref, name, bicycle, horse 
+               FROM ( 
+               SELECT 
+               geom, ('highway_' || highway) AS feature, ref, name, bicycle, horse,
+               (CASE WHEN rel_networks LIKE '%iwn%' THEN 'iwn' WHEN rel_networks LIKE '%nwn%' THEN 'nwn' WHEN rel_networks LIKE '%rwn%' THEN 'rwn' WHEN rel_networks LIKE '%lwn%' THEN 'lwn' END) as network
+                 FROM hiking_ways 
+                  WHERE (tunnel IS NULL OR NOT tunnel IN ('yes', 'building_passage'))
+                      AND (covered IS NULL OR NOT covered = 'yes')
+                      AND (bridge IS NULL OR NOT bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct'))) 
+               as query) as route
+        geometry_field: geom
+        <<: *osm2pgsql
+    <<: *extents
+    properties:
+      minzoom: 6
   - id: highway-area-casing
     geometry: polygon
     <<: *extents
@@ -685,26 +707,6 @@ Layer:
         ) AS highway_area_casing
     properties:
       minzoom: 14
-  - id: route
-    geometry: linestring
-    Datasource: 
-        table: (SELECT geom,
-                 (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, 
-               network, ref, name, bicycle, horse 
-               FROM ( 
-               SELECT 
-               geom, ('highway_' || highway) AS feature, ref, name, bicycle, horse,
-               (CASE WHEN rel_networks LIKE '%iwn%' THEN 'iwn' WHEN rel_networks LIKE '%nwn%' THEN 'nwn' WHEN rel_networks LIKE '%rwn%' THEN 'rwn' WHEN rel_networks LIKE '%lwn%' THEN 'lwn' END) as network
-                 FROM hiking_ways 
-                  WHERE (tunnel IS NULL OR NOT tunnel IN ('yes', 'building_passage'))
-                      AND (covered IS NULL OR NOT covered = 'yes')
-                      AND (bridge IS NULL OR NOT bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct'))) 
-               as query) as route
-        geometry_field: geom
-        <<: *osm2pgsql
-    <<: *extents
-    properties:
-      minzoom: 6
   - id: roads-casing
     geometry: linestring
     <<: *extents
@@ -1234,7 +1236,7 @@ Layer:
         <<: *osm2pgsql
     <<: *extents
     properties:
-        minzoom: 13
+        minzoom: 12
   - id: pois-poly-important
     geometry: polygon
     Datasource:
@@ -1249,7 +1251,7 @@ Layer:
         <<: *osm2pgsql
     <<: *extents
     properties:
-        minzoom: 13
+        minzoom: 12	
   - id: trees
     geometry: polygon
     <<: *extents
@@ -1817,6 +1819,43 @@ Layer:
         ) AS roads_text_ref_minor
     properties:
       minzoom: 15
+  - id: text-poly
+    geometry: point
+    <<: *extents
+    Datasource:
+      <<: *osm2pgsql
+      table: |-
+        (SELECT
+            ST_PointOnSurface(way) AS way,
+            way_area/NULLIF(POW(!scale_denominator!*0.001*0.28,2),0) AS way_pixels,
+            COALESCE(
+              'landuse_' || CASE WHEN landuse IN ('forest', 'farmland') THEN landuse END,
+              'natural_' || CASE WHEN "natural" IN ('wood', 'glacier', 'sand', 'scree', 'shingle', 'bare_rock',
+                                                    'water', 'bay', 'strait') THEN "natural" END,
+              'place_' || CASE WHEN place IN ('island') THEN place END,
+              'boundary_' || CASE WHEN boundary IN ('aboriginal_lands', 'national_park')
+                                       OR (boundary = 'protected_area' AND tags->'protect_class' IN ('1','1a','1b','2','3','4','5','6'))
+                                       THEN boundary END,
+              'leisure_' || CASE WHEN leisure IN ('nature_reserve') THEN leisure END
+            ) AS feature,
+            COALESCE((tags->('name:it')), name, '') as name,
+            CASE WHEN building = 'no' OR building IS NULL THEN 'no' ELSE 'yes' END AS is_building -- always no with the where conditions
+          FROM planet_osm_polygon
+          WHERE ST_PointOnSurface(way) && !bbox!
+            AND COALESCE((tags->('name:it')), name, NULL) IS NOT NULL
+            AND (landuse IN ('forest', 'farmland')
+              OR "natural" IN ('wood', 'glacier', 'sand', 'scree', 'shingle', 'bare_rock', 'water', 'bay', 'strait')
+              OR "place" IN ('island')
+              OR boundary IN ('aboriginal_lands', 'national_park')
+              OR (boundary = 'protected_area' AND tags->'protect_class' IN ('1','1a','1b','2','3','4','5','6'))
+              OR leisure IN ('nature_reserve'))
+            AND building IS NULL
+            AND way_area > 100*POW(!scale_denominator!*0.001*0.28,2)
+            AND way_area < 768000*POW(!scale_denominator!*0.001*0.28,2)
+          ORDER BY way_area DESC
+        ) AS text_poly
+    properties:
+      minzoom: 2
   - id: text-line
     geometry: linestring
     <<: *extents
@@ -1857,12 +1896,16 @@ Layer:
                 tags->'information' as information,
                 name,
                 ref,
-               man_made,
-               shop,
-               tags->'sport' as sport,
-               "natural",
-               highway, tags->'public_transport' as public_transport, tags->'ele' as ele FROM planet_osm_point
-                WHERE tourism IN ('viewpoint', 'information') OR historic IS NOT NULL OR amenity in ('drinking_water', 'place_of_worship', 'picnic_site', 'picnic_table', 'bench') OR man_made in ('cross', 'adit') OR tags->'sport' = 'climbing' OR shop = 'outdoor' OR "natural" in ('cave_entrance') OR aeroway='helipad' OR highway='bus_stop' OR (tags->'public_transport'='platform' and tags->'bus'='yes')) AS pois
+                man_made,
+                shop,
+                tags->'sport' as sport,
+                "natural",
+                leisure,
+                highway, tags->'public_transport' as public_transport, tags->'ele' as ele FROM planet_osm_point
+                WHERE tourism IN ('viewpoint', 'information') OR historic IS NOT NULL OR amenity in ('drinking_water', 'place_of_worship', 'picnic_site', 'picnic_table', 'bench') 
+                OR man_made in ('cross', 'adit') OR tags->'sport' = 'climbing' OR shop = 'outdoor' OR "natural" in ('cave_entrance') OR aeroway='helipad' OR highway='bus_stop'
+                 OR (tags->'public_transport'='platform' and tags->'bus'='yes') OR leisure = 'picnic_table'
+                ) AS pois
         <<: *osm2pgsql
     <<: *extents
     properties:
@@ -1877,12 +1920,16 @@ Layer:
                 tags->'information' as information,
                 name,
                 ref,
-               man_made,
-               shop,
-               tags->'sport' as sport,
-               "natural",
-               highway, tags->'public_transport' as public_transport, null as mountain_pass, null as ele  FROM planet_osm_polygon
-                WHERE tourism IN ('viewpoint', 'information') OR historic IS NOT NULL OR amenity in ('drinking_water', 'place_of_worship', 'picnic_site', 'picnic_table', 'bench') OR man_made in ('cross', 'adit') OR aeroway='helipad' OR tags->'sport' = 'climbing' OR shop = 'outdoor' OR "natural" in ('cave_entrance') or highway='bus_stop' or (tags->'public_transport'='platform' and tags->'bus'='yes')) AS pois
+                man_made,
+                shop,
+                tags->'sport' as sport,
+                "natural",
+                leisure,
+                highway, tags->'public_transport' as public_transport, null as mountain_pass, null as ele  FROM planet_osm_polygon
+                WHERE tourism IN ('viewpoint', 'information') OR historic IS NOT NULL OR amenity in ('drinking_water', 'place_of_worship', 'picnic_site', 'picnic_table', 'bench')
+                 OR man_made in ('cross', 'adit') OR aeroway='helipad' OR tags->'sport' = 'climbing' OR shop = 'outdoor' OR "natural" in ('cave_entrance') or highway='bus_stop'
+                 OR (tags->'public_transport'='platform' and tags->'bus'='yes') OR leisure = 'picnic_table'
+                ) AS pois
         <<: *osm2pgsql
     <<: *extents
     properties:
@@ -1906,7 +1953,7 @@ Layer:
         <<: *osm2pgsql
     <<: *extents
     properties: 
-        minzoom: 13
+        minzoom: 12
   - id: pois-poly-important-text
     geometry: polygon
     Datasource:
@@ -1925,7 +1972,7 @@ Layer:
         <<: *osm2pgsql
     <<: *extents
     properties:
-        minzoom: 13
+        minzoom: 12
   - id: pois-text
     geometry: point
     Datasource:
@@ -2107,7 +2154,7 @@ Layer:
     Datasource: 
         <<: *osm2pgsql
         table: (SELECT
-               wkb_geometry, elev::integer
-               from contour
-               where elev::numeric % 500. = 0) AS contour_text
+               wkb_geometry, elev::integer,
+               CASE WHEN elev::numeric % 500. = 0 THEN 1 ELSE 0 END AS major
+               from contour) AS contour_text
         geometry_field: wkb_geometry
