@@ -12,7 +12,7 @@ Map {
 @amenity-orange: #ffa500;
 @label-color: #9f8170;
 @radius-max: 1.5;
-@radius-avg: 0.75;
+@radius-avg: 1;
 @radius-min: 0.5;
 
 /// --- Missing variables ---
@@ -40,43 +40,56 @@ Map {
 
 #contour {
   [zoom >= 10] {
-    line-width: 0.1;
+    line-width: 0.2;
     line-color: @label-color;
-    [zoom >= 14] {
-      line-width: 0.4;
+    [zoom >= 15] {
+      line-width: 0.6;
       [zoom >= 17] {
-        line-width: 0.8;
+        line-width: 1;
       }
     }
    }
 }
 #contour-major {
   [zoom >= 10] {
-    line-width: 0.2;
+    line-width: 0.4;
     line-color: @label-color;
-    [zoom >= 14] {
-      line-width: 0.8;
+    [zoom >= 15] {
+      line-width: 1;
       [zoom >= 17] {
-        line-width: 1.2;
+        line-width: 1.5;
       }
     }
    }
 }
 #contour-text {
-  [zoom >= 14]::text {
+  [major = 1][zoom >= 14]::text {
     text-name: "[elev]";
     text-face-name: @book-fonts;
     text-fill: darken(@label-color, 15%);
-    text-size: 4;
+    text-size: 10;
+    text-dy: 1;
     text-placement: line;
-    text-halo-radius: 0.5;
-    text-spacing: 50;
+    text-halo-radius: @radius-min;
+    text-spacing: 100;
     text-halo-fill: rgba(255,255,255,0.8);
     [zoom >= 17] {
-        text-size: 6;
-        text-halo-radius: 1.0;
-        text-spacing: 75;
+        text-size: 12;
+        text-halo-radius: @standard-halo-radius;
+        text-spacing: 200;
+        text-dy: 2;
     }
+  }
+  [major = 0][zoom >= 17]::text {
+    text-name: "[elev]";
+    text-face-name: @book-fonts;
+    text-fill: darken(@label-color, 15%);
+    text-size: 10;
+    text-dy: 1;
+    text-placement: line;
+    text-halo-radius: @standard-halo-radius;
+    text-spacing: 300;
+    text-halo-fill: rgba(255,255,255,0.8);
   }
 }
 
