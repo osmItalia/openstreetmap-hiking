@@ -1,10 +1,29 @@
-@amenity-orange: #ffa500;
-@label-color: #9f8170;
-
 Map {
-  background-color: #ffffff;
+  background-color: @land-color;
 }
 
+@water-color: #aad3df;
+@land-color: #f2efe9;
+
+@standard-halo-radius: 1;
+@standard-halo-fill: rgba(255,255,255,0.6);
+
+/// --- New variables ---
+@amenity-orange: #ffa500;
+@label-color: #9f8170;
+@radius-max: 1.5;
+@radius-avg: 0.75;
+@radius-min: 0.5;
+
+/// --- Missing variables ---
+@aboriginal: #82643a;
+@protected-area: #008000;
+@standard-font-size: 10;
+@standard-wrap-width: 30; // 3 em
+@standard-line-spacing-size: -1.5; // -0.15 em
+@standard-font: @book-fonts;
+@transportation-icon: #0092da;
+@transportation-text: #0066ff;
 
 #hill-shade { raster-opacity: 0.5; }
 #slope-shape { raster-opacity: 0.5; }
@@ -14,7 +33,6 @@ Map {
 #slope-shade,
 #hill-shade {
     raster-scaling: bilinear;
-    // note: in TileMill 0.9.x and earlier this is called raster-mode
     raster-comp-op: multiply;
     raster-opacity: 0.5;
 }
@@ -61,22 +79,6 @@ Map {
     }
   }
 }
-
-@book-fonts:    "DejaVu Sans Book", "Arundina Sans Regular", "Padauk Regular", "Khmer OS Metal Chrieng Regular",
-                "Mukti Narrow Regular", "gargi Medium", "TSCu_Paranar Regular", "Tibetan Machine Uni Regular", "Mallige Normal",
-                "Droid Sans Fallback Regular", "Unifont Medium", "unifont Medium";
-@bold-fonts:    "DejaVu Sans Bold", "Arundina Sans Bold", "Padauk Bold", "Mukti Narrow Bold", "TSCu_Paranar Bold", "Mallige Bold",
-                "DejaVu Sans Book", "Arundina Sans Regular", "Padauk Regular", "Khmer OS Metal Chrieng Regular",
-                "Mukti Narrow Regular", "gargi Medium", "TSCu_Paranar Regular", "Tibetan Machine Uni Regular", "Mallige Normal",
-                "Droid Sans Fallback Regular", "Unifont Medium", "unifont Medium";
-
-@oblique-fonts: "DejaVu Sans Oblique", "Arundina Sans Italic", "TSCu_Paranar Italic", "Mallige NormalItalic",
-                "DejaVu Sans Book", "Arundina Sans Regular", "Padauk Regular", "Khmer OS Metal Chrieng Regular",
-                "Mukti Narrow Regular", "gargi Medium", "TSCu_Paranar Regular", "Tibetan Machine Uni Regular", "Mallige Normal",
-                "Droid Sans Fallback Regular", "Unifont Medium", "unifont Medium";
-
-
-@land-color: #f2efe9;
 
 #color-relief {
   raster-opacity:1;
