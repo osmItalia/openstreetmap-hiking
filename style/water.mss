@@ -47,7 +47,8 @@
       [zoom >= 15] {
         line-width: 2.5;
         line-color: white;
-        [waterway = 'stream'][zoom >= 15] {
+        [waterway = 'stream'][    int_intermittent != 'yes'][zoom >= 15],
+        [waterway = 'stream'][zoom >= 16] {
           line-width: 3.5;
         }
         [int_intermittent = 'yes'] {
@@ -287,8 +288,7 @@
 }
 
 
-#text-poly-low-zoom[zoom < 10],
-#text-point[zoom >= 10] {
+#text-poly {
   [feature = 'natural_water'],
   [feature = 'natural_bay'],
   [feature = 'natural_strait'],
