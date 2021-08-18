@@ -64,15 +64,18 @@ Map {
     text-name: "[elev]";
     text-face-name: @book-fonts;
     text-fill: darken(@label-color, 15%);
-    text-size: 10;
+    text-size: 8;
     text-dy: 1;
     text-placement: line;
     text-halo-radius: @standard-halo-radius;
-    text-spacing: 100;
+    text-spacing: 250;
     text-halo-fill: rgba(255,255,255,0.8);
+    [zoom >= 16] {
+        text-size: 10;
+    }
     [zoom >= 17] {
         text-size: 12;
-        text-spacing: 200;
+        text-spacing: 400;
         text-dy: 2;
     }
   }
@@ -84,7 +87,7 @@ Map {
     text-dy: 1;
     text-placement: line;
     text-halo-radius: @standard-halo-radius;
-    text-spacing: 300;
+    text-spacing: 500;
     text-halo-fill: rgba(255,255,255,0.8);
   }
 }
