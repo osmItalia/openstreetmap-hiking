@@ -8,9 +8,9 @@
 #pois-important, #pois-poly-important {
   [tourism = 'alpine_hut'][zoom >= 13],
   [tourism = 'wilderness_hut'][zoom >= 14] {
-    marker-file: url('symbols/alpinehut_all.svg');
+    marker-file: url('symbols/tourism/alpinehut_all.svg');
     [tourism = 'wilderness_hut'] {
-      marker-file: url('symbols/alpinehut_half.svg');
+      marker-file: url('symbols/tourism/alpinehut_half.svg');
     }
     marker-fill: @amenity-red;
     marker-placement: interior;
@@ -28,7 +28,7 @@
 
   [natural = 'peak'][zoom >= 12],
   [natural = 'volcano'][zoom >= 13]{
-    marker-file: url('symbols/peak.svg');
+    marker-file: url('symbols/natural/peak.svg');
     marker-fill: @amenity-brown;
     line-color: @amenity-brown;
     marker-placement: interior;
@@ -46,7 +46,7 @@
   [mountain_pass = 'yes'],
   [natural = 'saddle']{
     [zoom >= 14] {
-      marker-file: url('symbols/mountain_pass.svg');
+      marker-file: url('symbols/natural/mountain_pass.svg');
       marker-fill: @amenity-brown;
       line-color: @amenity-brown;
       marker-placement: interior;
@@ -63,7 +63,7 @@
 
 #pois, #pois-poly {
   [amenity = 'bench'] [zoom >= 17] {
-    marker-file: url('symbols/bench.svg');
+    marker-file: url('symbols/amenity/bench.svg');
     marker-fill: @amenity-brown;
     marker-placement: interior;
     marker-width: 10;
@@ -75,7 +75,7 @@
     }
   }
   [tourism = 'viewpoint'][zoom >= 14] {
-    marker-file: url('symbols/viewpoint.svg');
+    marker-file: url('symbols/tourism/viewpoint.svg');
     marker-fill: @amenity-purple;
     marker-placement: interior;
     marker-width: 12;
@@ -88,19 +88,19 @@
   }
   [tourism = 'information'][zoom >= 14]{
     [information='office'] {
-      marker-file: url('symbols/information.svg');
+      marker-file: url('symbols/tourism/office.svg');
       marker-placement: interior;
       marker-fill: @amenity-red;
-      marker-width: 8;
+      marker-width: 12;
       [zoom >= 16] {
-        marker-width: 10;
+        marker-width: 14;
       }
       [zoom >= 18]{
-        marker-width: 14;
+        marker-width: 18;
       }
     }
     [information='guidepost'][zoom >= 15] {
-      marker-file: url('symbols/guidepost.svg');
+      marker-file: url('symbols/tourism/guidepost.svg');
       marker-placement: interior;
       marker-fill: @amenity-brown;
       marker-width: 12;
@@ -114,7 +114,7 @@
     [information='map'],
     [information='board'] {
       [zoom >= 15] {
-        marker-file: url('symbols/board.svg');
+        marker-file: url('symbols/tourism/board.svg');
         marker-placement: interior;
         marker-fill: @amenity-brown;
         marker-width: 10;
@@ -130,7 +130,7 @@
   [natural = 'cave_entrance'],
   [man_made = 'adit']{
     [zoom >= 14] {
-      marker-file: url('symbols/cave.svg');
+      marker-file: url('symbols/natural/cave.svg');
       marker-fill: @amenity-brown;
       marker-placement: interior;
       marker-width: 10;
@@ -143,7 +143,7 @@
     }
   }
   [shop = 'outdoor'][zoom >= 16] {
-    marker-file: url('symbols/outdoor.svg');
+    marker-file: url('symbols/shop/outdoor.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @amenity-purple;
@@ -168,7 +168,7 @@
     }
   }
   [tourism = 'museum'][zoom >= 14] {
-    marker-file: url('symbols/museum.svg');
+    marker-file: url('symbols/tourism/museum.svg');
     marker-fill: @amenity-purple;
     marker-width: 10;
     marker-placement: interior;
@@ -191,7 +191,7 @@
         marker-width: 9;
       }
       [zoom >= 18] {
-        marker-width: 12;
+        marker-width: 10;
       }
     }
   }
@@ -199,48 +199,36 @@
   [public_transport = 'platform']{
     [zoom >= 14] {
       marker-file: url('symbols/bus_stop.svg');
-      marker-width: 8;
+      marker-width: 12;
       marker-fill: @amenity-blu;
       marker-placement: interior;
       [zoom >= 16] {
-        marker-width: 12;
+        marker-width: 14;
       }
       [zoom >= 18]{
         marker-width: 16;
       }
     }
   }
-  [amenity = 'place_of_worship'][zoom >= 14] {
-    marker-file: url('symbols/christian.svg');
+  [amenity = 'place_of_worship'][zoom >= 16],
+  [man_made = 'cross'][zoom >= 16] {
+    marker-file: url('symbols/religion/cross.svg');
     marker-placement: interior;
     marker-fill: #000000;
-    marker-width: 6;
+    marker-width: 8;
     marker-placement: interior;
     marker-clip: false;
     [zoom >= 16] {
-      marker-width: 9;
-    }
-    [zoom >= 18]{
       marker-width: 12;
     }
-  }
-  [man_made = 'cross'][zoom >= 14] {
-    marker-file: url('symbols/cross.svg');
-    marker-fill: #000000;
-    marker-width: 6;
-    marker-placement: interior;
-    marker-clip: false;
-    [zoom >= 16] {
-      marker-width: 9;
-    }
     [zoom >= 18]{
-      marker-width: 12;
+      marker-width: 16;
     }
   }
   [amenity = 'picnic_site'][zoom >= 15],
   [amenity = 'picnic_table'][zoom >= 16],
   [leisure = 'picnic_table'][zoom >= 16]{
-    marker-file: url('symbols/picnic.svg');
+    marker-file: url('symbols/tourism/picnic.svg');
     marker-fill: @amenity-purple;
     marker-placement: interior;
     marker-clip: false;
@@ -253,7 +241,7 @@
     }
   }
   [aeroway = 'helipad'][zoom >= 15]{
-    marker-file: url('symbols/helipad.svg');
+    marker-file: url('symbols/helipad.16.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @amenity-blu;
@@ -338,6 +326,26 @@
 
 #pois-text,
 #pois-poly-text {
+  [tourism = 'information'][information = 'office'][zoom >= 16]{
+    text-name: "[name]";
+    text-fill: @amenity-red;
+    text-dy: 12;
+    text-size: @standard-font-size;
+    text-face-name: @book-fonts;    
+    text-halo-radius: @standard-halo-radius;
+    text-halo-fill: @standard-halo-fill;
+    text-wrap-width: @standard-wrap-width;
+    text-line-spacing: @standard-line-spacing-size;
+    [zoom >= 14] {
+        text-dy: 13;
+    }
+    [zoom >= 16] {
+        text-dy: 15;
+    }
+    [zoom >= 18]{
+        text-dy: 17;
+    }
+  }
   [sport = 'climbing'][zoom >= 15] {
     text-name: "[name]";
     text-fill: @amenity-purple;
@@ -373,7 +381,8 @@
     text-placement-type: simple;
     text-placements: 'N';
   }
-  [amenity = 'place_of_worship'] [zoom >= 17] {
+  [amenity = 'place_of_worship'] [zoom >= 17]
+  [man_made = 'cross'] [zoom >= 17] {
     text-name: "[name]";
     text-fill: @amenity-grey;
     text-dy: 5;
