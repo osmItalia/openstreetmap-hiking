@@ -6,14 +6,11 @@ Map {
 @land-color: #f2efe9;
 
 @standard-halo-radius: 1;
-@standard-halo-fill: rgba(255,255,255,0.6);
+@standard-halo-fill: rgba(255,255,255,0.8);
 
 /// --- New variables ---
 @amenity-orange: #ffa500;
 @label-color: #9f8170;
-@radius-max: 1.5;
-@radius-avg: 1;
-@radius-min: 0.5;
 
 /// --- Missing variables ---
 @aboriginal: #82643a;
@@ -70,12 +67,11 @@ Map {
     text-size: 10;
     text-dy: 1;
     text-placement: line;
-    text-halo-radius: @radius-min;
+    text-halo-radius: @standard-halo-radius;
     text-spacing: 100;
     text-halo-fill: rgba(255,255,255,0.8);
     [zoom >= 17] {
         text-size: 12;
-        text-halo-radius: @standard-halo-radius;
         text-spacing: 200;
         text-dy: 2;
     }

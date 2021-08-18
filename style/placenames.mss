@@ -527,7 +527,7 @@
       text-name: "[name]";
       text-fill: @placenames-light;
       text-face-name: @book-fonts;
-      text-halo-radius: @radius-max;
+      text-halo-radius: @standard-halo-radius;
       text-halo-fill: rgba(255,255,255,0.6);
       text-placement: line;
       text-transform: uppercase;
@@ -544,7 +544,7 @@
         [zoom >= 16] {
             text-size: 8;
             text-character-spacing: 4;
-            text-halo-radius: @radius-max * 1.5;
+            text-halo-radius: @standard-halo-radius * 2;
         }
       }
       [leng > 1000][leng <= 2500]{
@@ -557,7 +557,7 @@
         [zoom >= 16] {
             text-size: 10;
             text-character-spacing: 8;
-            text-halo-radius: @radius-max * 1.5;
+            text-halo-radius: @standard-halo-radius * 2;
         }
       }
       [leng > 2500][leng <= 5000]{
@@ -570,7 +570,7 @@
         [zoom >= 16] {
             text-size: 12;
             text-character-spacing: 10;
-            text-halo-radius: @radius-max * 1.5;
+            text-halo-radius: @standard-halo-radius * 2;
         }
       }
       [leng > 5000][leng <= 10000]{
@@ -583,7 +583,7 @@
         [zoom >= 16] {
             text-size: 18;
             text-character-spacing: 12;
-            text-halo-radius: @radius-max * 1.5;
+            text-halo-radius: @standard-halo-radius * 2;
         }
       }
       [leng > 10000][leng <= 25000]{
@@ -592,12 +592,12 @@
         [zoom >= 13] {
             text-size: 20;
             text-character-spacing: 14;
-            text-halo-radius: @radius-max * 1.5;
+            text-halo-radius: @standard-halo-radius * 2;
         }
         [zoom >= 16] {
             text-size: 22;
             text-character-spacing: 16;
-            text-halo-radius: @radius-max * 2;
+            text-halo-radius: @standard-halo-radius * 3;
         }
       }
       [leng > 25000] {
@@ -606,12 +606,12 @@
         [zoom >= 13] {
             text-size: 22;
             text-character-spacing: 16;
-            text-halo-radius: @radius-max * 1.5;
+            text-halo-radius: @standard-halo-radius * 2;
         }
         [zoom >= 16] {
             text-size: 24;
             text-character-spacing: 18;
-            text-halo-radius: @radius-max * 2;
+            text-halo-radius: @standard-halo-radius * 3;
         }
       }
     }
