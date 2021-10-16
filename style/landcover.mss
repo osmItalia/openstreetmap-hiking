@@ -69,7 +69,7 @@
 @golf_course: #b5e3b5;
 
 // --- Opacity ---
-@polyopa: 0.4;
+@polyopa: 0.6;
 
 #landcover-low-zoom[zoom < 10],
 #landcover[zoom >= 10] {
