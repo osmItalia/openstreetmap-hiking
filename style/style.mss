@@ -22,9 +22,9 @@ Map {
 @transportation-icon: #0092da;
 @transportation-text: #0066ff;
 
-#hill-shade { raster-opacity: 0.5; }
-#slope-shape { raster-opacity: 0.5; }
-#color-relief { raster-opacity: 0.5; }
+#hill-shade { raster-opacity: 0.9; }
+#slope-shape { raster-opacity: 0.7; }
+#color-relief { raster-opacity: 0.4; }
 
 #color-relief,
 #slope-shade,
