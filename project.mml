@@ -1,16 +1,16 @@
 scale: 1
 metatile: 2
-name: OpenStreetMap Carto
-description: A general-purpose OpenStreetMap mapnik style, in CartoCSS
+name: OpenStreetMap hiking
+description: A hiking OpenStreetMap mapnik style, in CartoCSS
 bounds: &world
   - 10.3443
-  - 45.80207,
-  - 12.52358,
+  - 45.80207
+  - 12.52358
   - 47.13
 center:
-  - 10.69641,
-  - 45.88603,
-  - 6
+  - 10.69641
+  - 45.88603
+  - 10
 format: png
 interactivity: false
 minzoom: 0
@@ -1861,8 +1861,7 @@ Layer:
     <<: *extents
     Datasource:
       <<: *osm2pgsql
-      table: |-
-        (SELECT
+      table: (SELECT
           way,
             NULL as way_pixels,
             COALESCE('aerialway_' || aerialway, 'attraction_' || CASE WHEN tags @> 'attraction=>water_slide' THEN 'water_slide' END, 'leisure_' || leisure, 'man_made_' || man_made, 'waterway_' || waterway, 'natural_' || "natural") AS feature,
