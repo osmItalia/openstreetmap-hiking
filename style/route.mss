@@ -1,4 +1,4 @@
-@route-width: 0.5;
+// --- route color is set in project.mml in the query @route-width: 0.5; ---
 @route-color: red;
 @route-background-width:          1;
 @route-bridge-casing-width:       0.5;
@@ -11,7 +11,7 @@
     [network = 'rwn'][zoom >= 10],
     [network = 'lwn'][zoom >= 11],
     [network = null][zoom >= 11] {
-      line-color: @route-color;
+      line-color: "[route_color]";
       line-width: @route-width;
     }
     [feature = 'highway_footway'],
@@ -24,10 +24,20 @@
         [zoom >= 19] { line-width: @footway-width-z19 + 1 * (@route-background-width + @route-bridge-casing-width); }
        
         #route-tunnels {
-          line-offset: 1.5;
+          [cai = 'true']{
+            line-offset: 1.5;
+          }
+          [cai = 'false']{
+            line-offset: 1.5;
+          }
         }
         #route-bridges {
-          line-offset: 2;
+          [cai = 'true']{
+            line-offset: 2;
+          }
+          [cai = 'false']{
+            line-offset: -2;
+          }
         }
       }
     }
@@ -38,7 +48,12 @@
         [zoom >= 15] { line-width: @steps-width-z15 + 1 * (@route-background-width + @route-tunnel-casing-width); }
       }
       #route-bridges {
-        line-offset: 2;
+        [cai = 'true']{
+          line-offset: 2;
+        }
+        [cai = 'false']{
+          line-offset: -2;
+        }
       }
       #route-tunnels {
         line-offset: 1.5;
@@ -75,7 +90,7 @@
     [network = 'rwn'][zoom >= 10],
     [network = 'lwn'][zoom >= 11],
     [network = null][zoom >= 11] {
-      line-color: @route-color;
+      line-color: "[route_color]";
       line-width: @route-width;
     }
     [feature = 'highway_footway'],
@@ -90,7 +105,12 @@
         [zoom >= 19] { line-width: @footway-width-z19 + @route-background-width; }
         line-join: round;
         line-cap: round;
-        line-offset: 2;
+        [cai = 'true']{
+          line-offset: 2;
+        }
+        [cai = 'false']{
+          line-offset: -2;
+        }
       }
     }
     
@@ -100,14 +120,24 @@
         [zoom >= 15] { line-width:  @steps-width-z15 + @route-background-width; }
         line-join: round;
         line-cap: round;
-        line-offset: 2;
+        [cai = 'true']{
+          line-offset: 2;
+        }
+        [cai = 'false']{
+          line-offset: -2;
+        }
       }
     }
     [feature = 'highway_track'] {
       [zoom >= 13] {
         line-join: round;
         line-width: @track-width-z13 + @route-background-width;
-        line-offset: 2;
+        [cai = 'true']{
+          line-offset: 2;
+        }
+        [cai = 'false']{
+          line-offset: -2;
+        }
         [zoom >= 15] {line-width: @track-width-z15 + @route-background-width;}
       }
     }
@@ -115,7 +145,12 @@
     [feature = 'highway_residential'] {
       [zoom >= 13] {
         line-join: round;
-        line-offset: 2;
+        [cai = 'true']{
+          line-offset: 2;
+        }
+        [cai = 'false']{
+          line-offset: -2;
+        }
         line-width: @residential-width-z13 + 2 * @route-background-width;
         [zoom >= 15] { line-width: @residential-width-z15 + @route-background-width; }
         [zoom >= 16] { line-width: @residential-width-z16 + @route-background-width; }
@@ -129,7 +164,12 @@
       [zoom >= 13] {
         line-join: round;
         line-width: @tertiary-width-z13 + @route-background-width;
-        line-offset: 2;
+        [cai = 'true']{
+          line-offset: 2;
+        }
+        [cai = 'false']{
+          line-offset: -2;
+        }
         [zoom >= 15] { line-width: @tertiary-width-z15 + @route-background-width; }
         [zoom >= 16] { line-width: @tertiary-width-z16 + @route-background-width; }
         [zoom >= 17] { line-width: @tertiary-width-z17 + @route-background-width; }
@@ -140,7 +180,12 @@
     [feature = 'highway_secondary']{
       [zoom >= 13] {
         line-join: round;
-        line-offset: 2;
+        [cai = 'true']{
+          line-offset: 2;
+        }
+        [cai = 'false']{
+          line-offset: -2;
+        } 
         line-width: @secondary-width-z13 + @route-background-width;
         [zoom >= 15] { line-width: @secondary-width-z15 + @route-background-width; }
         [zoom >= 16] { line-width: @secondary-width-z16 + @route-background-width; }
@@ -157,10 +202,15 @@
     text-name: "[ref]";
     text-face-name: @oblique-fonts;
     text-placement: line;
-    text-fill: @route-color;
+    text-fill: "[route_color]";
     text-spacing: 200;
     text-size: 8;
-    text-dy: 4;
+    [cai = 'true']{
+      text-dy: 4;
+    }
+    [cai = 'false']{
+      text-dy: -4;
+    }
     text-max-char-angle-delta: 15;
     text-halo-radius: @standard-halo-radius;
     text-halo-fill: rgba(255,255,255,0.8);

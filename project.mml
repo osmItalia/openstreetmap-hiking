@@ -407,12 +407,14 @@ Layer:
     Datasource:
         table: (SELECT geom,
                  (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, 
-                ref, name, bicycle, horse, network
+                ref, name, bicycle, horse, network, cai, route_color
                FROM ( 
                SELECT 
-               geom, ('highway_' || highway) AS feature, ref, name, bicycle, horse,
-               (CASE WHEN rel_networks LIKE '%iwn%' THEN 'iwn' WHEN rel_networks LIKE '%nwn%' THEN 'nwn' WHEN rel_networks LIKE '%rwn%' THEN 'rwn' WHEN rel_networks LIKE '%lwn%' THEN 'lwn' END) as network
-                 FROM hiking_ways 
+               w.geom, ('highway_' || w.highway) AS feature, w.ref, w.name, w.bicycle, w.horse,
+               (CASE WHEN w.rel_networks LIKE '%iwn%' THEN 'iwn' WHEN w.rel_networks LIKE '%nwn%' THEN 'nwn' WHEN w.rel_networks LIKE '%rwn%' THEN 'rwn' WHEN w.rel_networks LIKE '%lwn%' THEN 'lwn' END) as network,
+               (CASE WHEN r.cai_scale IS NOT NULL THEN true WHEN r.cai_scale IS NULL THEN false END) as cai,
+               (CASE WHEN r.cai_scale IS NOT NULL THEN 'red' WHEN r.cai_scale IS NULL THEN 'purple' END) as route_color
+                 FROM hiking_ways w left join hiking_routes r on r.relation_id=ANY(w.rel_ids)
                   WHERE (tunnel = 'yes' OR tunnel = 'building_passage' OR covered = 'yes')) as query) as routetunnels
         geometry_field: geom
         <<: *osm2pgsql
@@ -666,12 +668,14 @@ Layer:
     Datasource: 
         table: (SELECT geom,
                  (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, 
-               network, ref, name, bicycle, horse 
+               network, ref, name, bicycle, horse, cai, route_color
                FROM ( 
                SELECT 
-               geom, ('highway_' || highway) AS feature, ref, name, bicycle, horse,
-               (CASE WHEN rel_networks LIKE '%iwn%' THEN 'iwn' WHEN rel_networks LIKE '%nwn%' THEN 'nwn' WHEN rel_networks LIKE '%rwn%' THEN 'rwn' WHEN rel_networks LIKE '%lwn%' THEN 'lwn' END) as network
-                 FROM hiking_ways 
+               w.geom, ('highway_' || w.highway) AS feature, w.ref, w.name, w.bicycle, w.horse,
+               (CASE WHEN rel_networks LIKE '%iwn%' THEN 'iwn' WHEN rel_networks LIKE '%nwn%' THEN 'nwn' WHEN rel_networks LIKE '%rwn%' THEN 'rwn' WHEN rel_networks LIKE '%lwn%' THEN 'lwn' END) as network,
+               (CASE WHEN r.cai_scale IS NOT NULL THEN 'true' WHEN r.cai_scale IS NULL THEN 'false' END) as cai,
+               (CASE WHEN r.cai_scale IS NOT NULL THEN 'red' WHEN r.cai_scale IS NULL THEN 'purple' END) as route_color
+                 FROM hiking_ways w left join hiking_routes r on r.relation_id=ANY(w.rel_ids)
                   WHERE (tunnel IS NULL OR NOT tunnel IN ('yes', 'building_passage'))
                       AND (covered IS NULL OR NOT covered = 'yes')
                       AND (bridge IS NULL OR NOT bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct'))) 
@@ -979,9 +983,15 @@ Layer:
   - id: route-bridges
     geometry: linestring
     Datasource:
-        table: (SELECT geom, (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, network, ref, name, bicycle, horse FROM ( SELECT geom, ('highway_' || highway) AS feature,
-         (CASE WHEN rel_networks LIKE '%iwn%' THEN 'iwn' WHEN rel_networks LIKE '%nwn%' THEN 'nwn' WHEN rel_networks LIKE '%rwn%' THEN 'rwn' WHEN rel_networks LIKE '%lwn%' THEN 'lwn' END) as network,
-         ref,name, bicycle, horse  FROM hiking_ways  WHERE bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct')) as query) AS bridges
+        table: (SELECT geom, (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, network, ref, name, bicycle, horse, cai, route_color
+               FROM
+                 ( SELECT w.geom, ('highway_' || w.highway) AS feature,
+                 (CASE WHEN w.rel_networks LIKE '%iwn%' THEN 'iwn' WHEN w.rel_networks LIKE '%nwn%' THEN 'nwn' WHEN w.rel_networks LIKE '%rwn%' THEN 'rwn' WHEN w.rel_networks LIKE '%lwn%' THEN 'lwn' END) as network,
+                 w.ref, w.name, w.bicycle, w.horse,
+                 (CASE WHEN r.cai_scale IS NOT NULL THEN true WHEN r.cai_scale IS NULL THEN false END) as cai,
+                 (CASE WHEN r.cai_scale IS NOT NULL THEN 'red' WHEN r.cai_scale IS NULL THEN 'purple' END) as route_color
+                 FROM hiking_ways w left join hiking_routes r on r.relation_id=ANY(w.rel_ids)
+          WHERE w.bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct')) as query) AS bridges
         geometry_field: geom
         <<: *osm2pgsql
     <<: *extents
@@ -2018,13 +2028,15 @@ Layer:
                 geom,
                 ref,
                 name,
+                (CASE WHEN cai_scale IS NOT NULL THEN 'true' WHEN cai_scale IS NULL THEN 'false' END) as cai,
+                (CASE WHEN cai_scale IS NOT NULL THEN 'red' WHEN cai_scale IS NULL THEN 'purple' END) as route_color,
                 tags->'osmc:symbol' as symbol FROM hiking_routes
               ) AS route_text
         geometry_field: geom
         <<: *osm2pgsql
     <<: *extents
     properties:
-        minzoom: 13
+        minzoom: 14
   - id: building-text
     geometry: point
     <<: *extents
