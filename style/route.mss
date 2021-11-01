@@ -1,5 +1,5 @@
-// --- route color is set in project.mml in the query @route-width: 0.5; ---
-@route-color: red;
+// --- route color is set in project.mml in the query @route-color: red; ---
+@route-width: 1;
 @route-background-width:          1;
 @route-bridge-casing-width:       0.5;
 @route-tunnel-casing-width:       1;
