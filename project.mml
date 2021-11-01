@@ -2037,6 +2037,18 @@ Layer:
     <<: *extents
     properties:
         minzoom: 14
+  - id: lines-text
+    geometry: linestring
+    <<: *extents
+    Datasource:
+        <<: *osm2pgsql
+        table: (SELECT
+               way, name, "natural", ST_Length(way) as leng
+               FROM planet_osm_line
+               WHERE "natural" = 'valley'
+               ) AS lines_text
+    properties:
+        minzoom: 10
   - id: building-text
     geometry: point
     <<: *extents
