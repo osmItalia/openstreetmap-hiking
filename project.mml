@@ -1573,103 +1573,6 @@ Layer:
         ) AS power_towers
     properties:
       minzoom: 14
-  - id: roads-text-ref-low-zoom
-    geometry: linestring
-    <<: *extents
-    Datasource:
-      <<: *osm2pgsql
-      table: |-
-        (SELECT
-            way,
-            highway,
-            height,
-            width,
-            refs
-          FROM (
-            SELECT
-                way,
-                osm_id,
-                highway,
-                array_length(refs,1) AS height,
-                (SELECT MAX(char_length(ref)) FROM unnest(refs) AS u(ref)) AS width,
-                array_to_string(refs, E'\n') AS refs
-              FROM (
-                SELECT
-                    way,
-                    osm_id,
-                    highway,
-                    string_to_array(ref, ';') AS refs
-                FROM planet_osm_roads
-                  WHERE highway IN ('motorway', 'trunk', 'primary', 'secondary')
-                  AND ref IS NOT NULL
-              ) AS p) AS q
-          WHERE height <= 4 AND width <= 11
-          ORDER BY
-            CASE
-              WHEN highway = 'motorway' THEN 38
-              WHEN highway = 'trunk' THEN 37
-              WHEN highway = 'primary' THEN 36
-              WHEN highway = 'secondary' THEN 35
-            END DESC NULLS LAST,
-            height DESC,
-            width DESC,
-            refs,
-            osm_id
-        ) AS roads_text_ref_low_zoom
-    properties:
-      minzoom: 10
-      maxzoom: 12
-  - id: roads-text-ref
-    geometry: linestring
-    <<: *extents
-    Datasource:
-      <<: *osm2pgsql
-      table: |-
-        (SELECT
-            way,
-            highway,
-            height,
-            width,
-            refs
-          FROM (
-            SELECT
-                osm_id,
-                way,
-                highway,
-                array_length(refs,1) AS height,
-                (SELECT MAX(char_length(ref)) FROM unnest(refs) AS u(ref)) AS width,
-                array_to_string(refs, E'\n') AS refs
-              FROM (
-                SELECT
-                    osm_id,
-                    way,
-                    COALESCE(
-                      CASE WHEN highway IN ('motorway', 'trunk', 'primary', 'secondary', 'tertiary') THEN highway END,
-                      CASE WHEN aeroway IN ('runway', 'taxiway') THEN aeroway END
-                    ) AS highway,
-                    string_to_array(ref, ';') AS refs
-                  FROM planet_osm_line
-                  WHERE (highway IN ('motorway', 'trunk', 'primary', 'secondary', 'tertiary') OR aeroway IN ('runway', 'taxiway'))
-                    AND ref IS NOT NULL
-              ) AS p) AS q
-          WHERE height <= 4 AND width <= 11
-          ORDER BY
-            CASE
-              WHEN highway = 'motorway' THEN 38
-              WHEN highway = 'trunk' THEN 37
-              WHEN highway = 'primary' THEN 36
-              WHEN highway = 'secondary' THEN 35
-              WHEN highway = 'tertiary' THEN 34
-              WHEN highway = 'runway' THEN 6
-              WHEN highway = 'taxiway' THEN 5
-            END DESC NULLS LAST,
-            height DESC,
-            width DESC,
-            refs,
-            osm_id
-        ) AS roads_text_ref
-    properties:
-      minzoom: 13
   - id: roads-area-text-name
     geometry: point
     <<: *extents
@@ -1754,37 +1657,6 @@ Layer:
     properties:
       cache-features: true
       minzoom: 15
-  - id: railways-text-name
-    geometry: linestring
-    <<: *extents
-    Datasource:
-      <<: *osm2pgsql
-      table: |-
-        (SELECT
-            way,
-            CASE WHEN railway = 'preserved' AND service IN ('spur', 'siding', 'yard') THEN 'INT-preserved-ssy'::text
-                 WHEN (railway = 'rail' AND service IN ('spur', 'siding', 'yard')) THEN 'INT-spur-siding-yard'
-                 WHEN (railway = 'tram' AND service IN ('spur', 'siding', 'yard')) THEN 'tram-service' ELSE railway END AS railway,
-            CASE WHEN (tunnel = 'yes' OR tunnel = 'building_passage' OR covered = 'yes') THEN 'yes' ELSE 'no' END AS tunnel,
-            tags->'highspeed' as highspeed,
-            tags->'usage' as usage,
-            construction,
-            COALESCE((tags->('name:it')), name, '') as name
-          FROM planet_osm_line l
-          WHERE railway IN ('rail', 'subway', 'narrow_gauge', 'light_rail', 'preserved', 'funicular',
-                            'monorail', 'miniature', 'tram', 'disused', 'construction')
-            AND (tunnel IS NULL OR NOT tunnel IN ('yes', 'building_passage'))
-            AND highway IS NULL -- Prevent duplicate rendering
-            AND COALESCE((tags->('name:it')), name, NULL) IS NOT NULL
-          ORDER BY
-            z_order DESC, -- put important rails first
-            COALESCE(layer, 0), -- put top layered rails first
-            length(name) DESC, -- Try to fit big labels in first
-            name DESC, -- Force a consistent ordering between differently named railways
-            l.osm_id DESC -- Force an ordering for railways of the same name, e.g. dualized rails
-        ) AS railways_text_name
-    properties:
-      minzoom: 11
   - id: roads-text-ref-minor
     geometry: linestring
     <<: *extents
@@ -1829,6 +1701,45 @@ Layer:
         ) AS roads_text_ref_minor
     properties:
       minzoom: 15
+  - id: pois-important-text
+    geometry: point
+    Datasource:
+        table: (SELECT
+                way, poi_ldir(way) as cdir, null as ldir, tags->'ele' as ele, amenity,
+                tourism,
+                name, 
+                tags->'information' as information,
+               tags->'mountain_pass' as mountain_pass,
+                ref,
+               man_made,
+               shop,
+               tags->'sport' as sport,
+               "natural",
+               highway, tags->'public_transport' as public_transport FROM planet_osm_point
+                WHERE tourism  in ('alpine_hut', 'wilderness_hut') OR tags->'mountain_pass' = 'yes' OR "natural" in ('peak', 'volcano', 'saddle')) AS pois
+        <<: *osm2pgsql
+    <<: *extents
+    properties: 
+        minzoom: 12
+  - id: pois-poly-important-text
+    geometry: polygon
+    Datasource:
+        table: (SELECT
+                way, poi_ldir(st_centroid(way)) as cdir, null as ele, null as ldir, amenity, 
+                tourism,
+                name, 
+                tags->'information' as information,
+                ref,
+               man_made,
+               shop,
+               tags->'sport' as sport,
+               "natural",
+               highway, tags->'public_transport' as public_transport, null as mountain_pass FROM planet_osm_polygon
+                WHERE tourism  in ('alpine_hut', 'wilderness_hut')) AS pois
+        <<: *osm2pgsql
+    <<: *extents
+    properties:
+        minzoom: 12
   - id: text-poly
     geometry: point
     <<: *extents
@@ -1943,45 +1854,6 @@ Layer:
     <<: *extents
     properties:
         minzoom: 13
-  - id: pois-important-text
-    geometry: point
-    Datasource: 
-        table: (SELECT
-                way, poi_ldir(way) as cdir, null as ldir, tags->'ele' as ele, amenity, 
-                tourism,
-                name, 
-                tags->'information' as information,
-               tags->'mountain_pass' as mountain_pass,
-                ref,
-               man_made,
-               shop,
-               tags->'sport' as sport,
-               "natural",
-               highway, tags->'public_transport' as public_transport FROM planet_osm_point
-                WHERE tourism  in ('alpine_hut', 'wilderness_hut') OR tags->'mountain_pass' = 'yes' OR "natural" in ('peak', 'volcano', 'saddle')) AS pois
-        <<: *osm2pgsql
-    <<: *extents
-    properties: 
-        minzoom: 12
-  - id: pois-poly-important-text
-    geometry: polygon
-    Datasource:
-        table: (SELECT
-                way, poi_ldir(st_centroid(way)) as cdir, null as ele, null as ldir, amenity, 
-                tourism,
-                name, 
-                tags->'information' as information,
-                ref,
-               man_made,
-               shop,
-               tags->'sport' as sport,
-               "natural",
-               highway, tags->'public_transport' as public_transport, null as mountain_pass FROM planet_osm_polygon
-                WHERE tourism  in ('alpine_hut', 'wilderness_hut')) AS pois
-        <<: *osm2pgsql
-    <<: *extents
-    properties:
-        minzoom: 12
   - id: pois-text
     geometry: point
     Datasource:
@@ -2043,12 +1915,140 @@ Layer:
     Datasource:
         <<: *osm2pgsql
         table: (SELECT
-               way, name, "natural", ST_Length(way) as leng
+               way, COALESCE((tags->('name:it')), name, '') as name, "natural", ST_Length(way) as leng
                FROM planet_osm_line
                WHERE "natural" = 'valley'
                ) AS lines_text
     properties:
         minzoom: 10
+  - id: roads-text-ref-low-zoom
+    geometry: linestring
+    <<: *extents
+    Datasource:
+      <<: *osm2pgsql
+      table: |-
+        (SELECT
+            way,
+            highway,
+            height,
+            width,
+            refs
+          FROM (
+            SELECT
+                way,
+                osm_id,
+                highway,
+                array_length(refs,1) AS height,
+                (SELECT MAX(char_length(ref)) FROM unnest(refs) AS u(ref)) AS width,
+                array_to_string(refs, E'\n') AS refs
+              FROM (
+                SELECT
+                    way,
+                    osm_id,
+                    highway,
+                    string_to_array(ref, ';') AS refs
+                FROM planet_osm_roads
+                  WHERE highway IN ('motorway', 'trunk', 'primary', 'secondary')
+                  AND ref IS NOT NULL
+              ) AS p) AS q
+          WHERE height <= 4 AND width <= 11
+          ORDER BY
+            CASE
+              WHEN highway = 'motorway' THEN 38
+              WHEN highway = 'trunk' THEN 37
+              WHEN highway = 'primary' THEN 36
+              WHEN highway = 'secondary' THEN 35
+            END DESC NULLS LAST,
+            height DESC,
+            width DESC,
+            refs,
+            osm_id
+        ) AS roads_text_ref_low_zoom
+    properties:
+      minzoom: 10
+      maxzoom: 12
+  - id: roads-text-ref
+    geometry: linestring
+    <<: *extents
+    Datasource:
+      <<: *osm2pgsql
+      table: |-
+        (SELECT
+            way,
+            highway,
+            height,
+            width,
+            refs
+          FROM (
+            SELECT
+                osm_id,
+                way,
+                highway,
+                array_length(refs,1) AS height,
+                (SELECT MAX(char_length(ref)) FROM unnest(refs) AS u(ref)) AS width,
+                array_to_string(refs, E'\n') AS refs
+              FROM (
+                SELECT
+                    osm_id,
+                    way,
+                    COALESCE(
+                      CASE WHEN highway IN ('motorway', 'trunk', 'primary', 'secondary', 'tertiary') THEN highway END,
+                      CASE WHEN aeroway IN ('runway', 'taxiway') THEN aeroway END
+                    ) AS highway,
+                    string_to_array(ref, ';') AS refs
+                  FROM planet_osm_line
+                  WHERE (highway IN ('motorway', 'trunk', 'primary', 'secondary', 'tertiary') OR aeroway IN ('runway', 'taxiway'))
+                    AND ref IS NOT NULL
+              ) AS p) AS q
+          WHERE height <= 4 AND width <= 11
+          ORDER BY
+            CASE
+              WHEN highway = 'motorway' THEN 38
+              WHEN highway = 'trunk' THEN 37
+              WHEN highway = 'primary' THEN 36
+              WHEN highway = 'secondary' THEN 35
+              WHEN highway = 'tertiary' THEN 34
+              WHEN highway = 'runway' THEN 6
+              WHEN highway = 'taxiway' THEN 5
+            END DESC NULLS LAST,
+            height DESC,
+            width DESC,
+            refs,
+            osm_id
+        ) AS roads_text_ref
+    properties:
+      minzoom: 13
+  - id: railways-text-name
+    geometry: linestring
+    <<: *extents
+    Datasource:
+      <<: *osm2pgsql
+      table: |-
+        (SELECT
+            way,
+            CASE WHEN railway = 'preserved' AND service IN ('spur', 'siding', 'yard') THEN 'INT-preserved-ssy'::text
+                 WHEN (railway = 'rail' AND service IN ('spur', 'siding', 'yard')) THEN 'INT-spur-siding-yard'
+                 WHEN (railway = 'tram' AND service IN ('spur', 'siding', 'yard')) THEN 'tram-service' ELSE railway END AS railway,
+            CASE WHEN (tunnel = 'yes' OR tunnel = 'building_passage' OR covered = 'yes') THEN 'yes' ELSE 'no' END AS tunnel,
+            tags->'highspeed' as highspeed,
+            tags->'usage' as usage,
+            construction,
+            COALESCE((tags->('name:it')), name, '') as name
+          FROM planet_osm_line l
+          WHERE railway IN ('rail', 'subway', 'narrow_gauge', 'light_rail', 'preserved', 'funicular',
+                            'monorail', 'miniature', 'tram', 'disused', 'construction')
+            AND (tunnel IS NULL OR NOT tunnel IN ('yes', 'building_passage'))
+            AND highway IS NULL -- Prevent duplicate rendering
+            AND COALESCE((tags->('name:it')), name, NULL) IS NOT NULL
+          ORDER BY
+            z_order DESC, -- put important rails first
+            COALESCE(layer, 0), -- put top layered rails first
+            length(name) DESC, -- Try to fit big labels in first
+            name DESC, -- Force a consistent ordering between differently named railways
+            l.osm_id DESC -- Force an ordering for railways of the same name, e.g. dualized rails
+        ) AS railways_text_name
+    properties:
+      minzoom: 11
   - id: building-text
     geometry: point
     <<: *extents
