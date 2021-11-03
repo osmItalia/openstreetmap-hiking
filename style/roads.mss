@@ -2772,8 +2772,8 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
 
 #junctions {
   [highway = 'motorway_junction'] {
-    [zoom >= 11] {
-      text-name: "[ref]";
+    [zoom >= 15] {
+      text-name: [name] + "\n" + [ref];
       text-size: 10;
       text-fill: @junction-text-color;
       text-min-distance: 2;
@@ -2781,19 +2781,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
       text-halo-radius: @standard-halo-radius;
       text-wrap-character: ";";
       text-wrap-width: 2; // effectively break after every wrap character
-      text-line-spacing: -1.5; // -0.15 em
-      [zoom >= 13] {
-        ["name" != null]["ref" = null] {
-          text-name: "[name]";
-        }
-        ["name" != null]["ref" != null] {
-          text-name: [name] + "\n" + [ref];
-        }
-      }
-      [zoom >= 15] {
-        text-size: 11;
-        text-line-spacing: -1.65; // -0.15 em
-      }
+      text-line-spacing: -1.65; // -0.15 em
     }
   }
 
@@ -2809,12 +2797,6 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
       text-wrap-width: 30;  // 3.0 em
       text-line-spacing: -1.5; // -0.15 em
       text-min-distance: 2;
-      [zoom >= 14] {
-        text-size: 9;
-      }
-      [zoom >= 15] {
-        text-size: 10;
-      }
       [zoom >= 17] {
         text-size: 11;
         text-line-spacing: -1.65; // -0.15 em
