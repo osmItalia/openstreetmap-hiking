@@ -1921,52 +1921,6 @@ Layer:
                ) AS lines_text
     properties:
         minzoom: 10
-  - id: roads-text-ref-low-zoom
-    geometry: linestring
-    <<: *extents
-    Datasource:
-      <<: *osm2pgsql
-      table: |-
-        (SELECT
-            way,
-            highway,
-            height,
-            width,
-            refs
-          FROM (
-            SELECT
-                way,
-                osm_id,
-                highway,
-                array_length(refs,1) AS height,
-                (SELECT MAX(char_length(ref)) FROM unnest(refs) AS u(ref)) AS width,
-                array_to_string(refs, E'\n') AS refs
-              FROM (
-                SELECT
-                    way,
-                    osm_id,
-                    highway,
-                    string_to_array(ref, ';') AS refs
-                FROM planet_osm_roads
-                  WHERE highway IN ('motorway', 'trunk', 'primary', 'secondary')
-                  AND ref IS NOT NULL
-              ) AS p) AS q
-          WHERE height <= 4 AND width <= 11
-          ORDER BY
-            CASE
-              WHEN highway = 'motorway' THEN 38
-              WHEN highway = 'trunk' THEN 37
-              WHEN highway = 'primary' THEN 36
-              WHEN highway = 'secondary' THEN 35
-            END DESC NULLS LAST,
-            height DESC,
-            width DESC,
-            refs,
-            osm_id
-        ) AS roads_text_ref_low_zoom
-    properties:
-      minzoom: 10
-      maxzoom: 12
   - id: roads-text-ref
     geometry: linestring
     <<: *extents
@@ -2017,7 +1971,7 @@ Layer:
             osm_id
         ) AS roads_text_ref
     properties:
-      minzoom: 13
+      minzoom: 14
   - id: railways-text-name
     geometry: linestring
     <<: *extents
