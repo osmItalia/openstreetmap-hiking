@@ -407,15 +407,16 @@ Layer:
     Datasource:
         table: (SELECT geom,
                  (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, 
-                ref, name, bicycle, horse, network, cai, route_color
-               FROM ( 
-               SELECT 
-               w.geom, ('highway_' || w.highway) AS feature, w.ref, w.name, w.bicycle, w.horse,
-               (CASE WHEN w.rel_networks LIKE '%iwn%' THEN 'iwn' WHEN w.rel_networks LIKE '%nwn%' THEN 'nwn' WHEN w.rel_networks LIKE '%rwn%' THEN 'rwn' WHEN w.rel_networks LIKE '%lwn%' THEN 'lwn' END) as network,
-               (CASE WHEN r.cai_scale IS NOT NULL THEN true WHEN r.cai_scale IS NULL THEN false END) as cai,
-               (CASE WHEN r.cai_scale IS NOT NULL THEN 'red' WHEN r.cai_scale IS NULL THEN 'purple' END) as route_color
+                 ref, name, bicycle, horse, network, cai, route_color
+                FROM (SELECT 
+                 (CASE WHEN r.cai_scale IS NOT NULL THEN w.geom WHEN r.cai_scale IS NULL THEN ST_reverse(w.geom) END) as geom,
+                 ('highway_' || w.highway) AS feature, w.ref, w.name, w.bicycle, w.horse,
+                 (CASE WHEN w.rel_networks LIKE '%iwn%' THEN 'iwn' WHEN w.rel_networks LIKE '%nwn%' THEN 'nwn' WHEN w.rel_networks LIKE '%rwn%' THEN 'rwn' WHEN w.rel_networks LIKE '%lwn%' THEN 'lwn' END) as network,
+                 (CASE WHEN r.cai_scale IS NOT NULL THEN true WHEN r.cai_scale IS NULL THEN false END) as cai,
+                 (CASE WHEN r.cai_scale IS NOT NULL THEN 'red' WHEN r.cai_scale IS NULL THEN 'purple' END) as route_color
                  FROM hiking_ways w left join hiking_routes r on r.relation_id=ANY(w.rel_ids)
-                  WHERE (tunnel = 'yes' OR tunnel = 'building_passage' OR covered = 'yes')) as query) as routetunnels
+                  WHERE (tunnel = 'yes' OR tunnel = 'building_passage' OR covered = 'yes'))
+                as query) as routetunnels
         geometry_field: geom
         <<: *osm2pgsql
     properties:
@@ -671,7 +672,8 @@ Layer:
                network, ref, name, bicycle, horse, cai, route_color
                FROM ( 
                SELECT 
-               w.geom, ('highway_' || w.highway) AS feature, w.ref, w.name, w.bicycle, w.horse,
+               (CASE WHEN r.cai_scale IS NOT NULL THEN w.geom WHEN r.cai_scale IS NULL THEN ST_reverse(w.geom) END) as geom,
+               ('highway_' || w.highway) AS feature, w.ref, w.name, w.bicycle, w.horse,
                (CASE WHEN rel_networks LIKE '%iwn%' THEN 'iwn' WHEN rel_networks LIKE '%nwn%' THEN 'nwn' WHEN rel_networks LIKE '%rwn%' THEN 'rwn' WHEN rel_networks LIKE '%lwn%' THEN 'lwn' END) as network,
                (CASE WHEN r.cai_scale IS NOT NULL THEN 'true' WHEN r.cai_scale IS NULL THEN 'false' END) as cai,
                (CASE WHEN r.cai_scale IS NOT NULL THEN 'red' WHEN r.cai_scale IS NULL THEN 'purple' END) as route_color
@@ -985,13 +987,15 @@ Layer:
     Datasource:
         table: (SELECT geom, (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, network, ref, name, bicycle, horse, cai, route_color
                FROM
-                 ( SELECT w.geom, ('highway_' || w.highway) AS feature,
-                 (CASE WHEN w.rel_networks LIKE '%iwn%' THEN 'iwn' WHEN w.rel_networks LIKE '%nwn%' THEN 'nwn' WHEN w.rel_networks LIKE '%rwn%' THEN 'rwn' WHEN w.rel_networks LIKE '%lwn%' THEN 'lwn' END) as network,
-                 w.ref, w.name, w.bicycle, w.horse,
-                 (CASE WHEN r.cai_scale IS NOT NULL THEN true WHEN r.cai_scale IS NULL THEN false END) as cai,
-                 (CASE WHEN r.cai_scale IS NOT NULL THEN 'red' WHEN r.cai_scale IS NULL THEN 'purple' END) as route_color
-                 FROM hiking_ways w left join hiking_routes r on r.relation_id=ANY(w.rel_ids)
-          WHERE w.bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct')) as query) AS bridges
+                 (SELECT 
+                  (CASE WHEN r.cai_scale IS NOT NULL THEN w.geom WHEN r.cai_scale IS NULL THEN ST_reverse(w.geom) END) as geom,
+                  (CASE WHEN w.rel_networks LIKE '%iwn%' THEN 'iwn' WHEN w.rel_networks LIKE '%nwn%' THEN 'nwn' WHEN w.rel_networks LIKE '%rwn%' THEN 'rwn' WHEN w.rel_networks LIKE '%lwn%' THEN 'lwn' END) as network,
+                  w.ref, w.name, w.bicycle, w.horse, ('highway_' || w.highway) AS feature,
+                  (CASE WHEN r.cai_scale IS NOT NULL THEN true WHEN r.cai_scale IS NULL THEN false END) as cai,
+                  (CASE WHEN r.cai_scale IS NOT NULL THEN 'red' WHEN r.cai_scale IS NULL THEN 'purple' END) as route_color
+                  FROM hiking_ways w left join hiking_routes r on r.relation_id=ANY(w.rel_ids)
+                  WHERE w.bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct'))
+                as query) AS bridges
         geometry_field: geom
         <<: *osm2pgsql
     <<: *extents
@@ -1897,13 +1901,12 @@ Layer:
     geometry: linestring
     Datasource:
         table: (SELECT
-                geom,
-                ref,
-                name,
-                (CASE WHEN cai_scale IS NOT NULL THEN 'true' WHEN cai_scale IS NULL THEN 'false' END) as cai,
-                (CASE WHEN cai_scale IS NOT NULL THEN 'red' WHEN cai_scale IS NULL THEN 'purple' END) as route_color,
-                tags->'osmc:symbol' as symbol FROM hiking_routes
-              ) AS route_text
+                (CASE WHEN r.cai_scale IS NOT NULL THEN w.geom WHEN r.cai_scale IS NULL THEN ST_reverse(w.geom) END) as geom,
+                r.ref,
+                r.name,
+                (CASE WHEN r.cai_scale IS NOT NULL THEN 'red' WHEN r.cai_scale IS NULL THEN 'purple' END) as route_color,
+                r.tags->'osmc:symbol' as symbol FROM hiking_ways w left join hiking_routes r on r.relation_id=ANY(w.rel_ids)
+               ) AS route_text
         geometry_field: geom
         <<: *osm2pgsql
     <<: *extents
