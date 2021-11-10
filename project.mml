@@ -1826,8 +1826,8 @@ Layer:
                 "natural",
                 leisure,
                 highway, tags->'public_transport' as public_transport, tags->'ele' as ele FROM planet_osm_point
-                WHERE tourism IN ('viewpoint', 'information') OR historic IS NOT NULL OR amenity in ('drinking_water', 'place_of_worship', 'picnic_site', 'picnic_table', 'bench') 
-                OR man_made in ('cross', 'adit') OR tags->'sport' = 'climbing' OR shop = 'outdoor' OR "natural" in ('cave_entrance') OR aeroway='helipad' OR highway='bus_stop'
+                WHERE tourism IN ('viewpoint', 'information') OR historic IS NOT NULL OR amenity in ('drinking_water', 'place_of_worship', 'picnic_site', 'picnic_table', 'bench', 'parking', 'townhall')
+                 OR man_made in ('cross', 'adit') OR tags->'sport' = 'climbing' OR shop = 'outdoor' OR "natural" in ('cave_entrance') OR aeroway='helipad' OR highway='bus_stop'
                  OR (tags->'public_transport'='platform' and tags->'bus'='yes') OR leisure = 'picnic_table'
                 ) AS pois
         <<: *osm2pgsql
@@ -1850,7 +1850,7 @@ Layer:
                 "natural",
                 leisure,
                 highway, tags->'public_transport' as public_transport, null as mountain_pass, null as ele  FROM planet_osm_polygon
-                WHERE tourism IN ('viewpoint', 'information') OR historic IS NOT NULL OR amenity in ('drinking_water', 'place_of_worship', 'picnic_site', 'picnic_table', 'bench')
+                WHERE tourism IN ('viewpoint', 'information') OR historic IS NOT NULL OR amenity in ('drinking_water', 'place_of_worship', 'picnic_site', 'picnic_table', 'bench', 'parking', 'townhall')
                  OR man_made in ('cross', 'adit') OR aeroway='helipad' OR tags->'sport' = 'climbing' OR shop = 'outdoor' OR "natural" in ('cave_entrance') or highway='bus_stop'
                  OR (tags->'public_transport'='platform' and tags->'bus'='yes') OR leisure = 'picnic_table'
                 ) AS pois
@@ -1873,7 +1873,7 @@ Layer:
                tags->'sport' as sport,
                "natural",
                highway,  tags->'public_transport' as public_transport FROM planet_osm_point
-                WHERE tourism NOT IN ('alpine_hut', 'wilderness_hut') OR historic IS NOT NULL OR amenity in ('drinking_water', 'place_of_worship') OR man_made = 'adit' OR tags->'sport' = 'climbing' OR shop = 'outdoor' OR "natural" in ('spring', 'cave_entrance')) AS pois
+                WHERE tourism NOT IN ('alpine_hut', 'wilderness_hut') OR historic IS NOT NULL OR amenity in ('drinking_water', 'place_of_worship', 'townhall') OR man_made = 'adit' OR tags->'sport' = 'climbing' OR shop = 'outdoor' OR "natural" in ('spring', 'cave_entrance')) AS pois
         <<: *osm2pgsql
     <<: *extents
     properties:
@@ -1892,7 +1892,7 @@ Layer:
                 tags->'sport' as sport,
                 "natural",
                 highway,  tags->'public_transport' as public_transport, null as mountain_pass, null as ele FROM planet_osm_polygon
-                WHERE tourism NOT IN ('alpine_hut', 'wilderness_hut') OR historic IS NOT NULL OR amenity in ('drinking_water', 'place_of_worship') OR man_made = 'adit' OR tags->'sport' = 'climbing' OR shop = 'outdoor' OR "natural" in ('peak', 'volcano', 'spring', 'cave_entrance', 'saddle')) AS pois_poly
+                WHERE tourism NOT IN ('alpine_hut', 'wilderness_hut') OR historic IS NOT NULL OR amenity in ('drinking_water', 'place_of_worship', 'townhall') OR man_made = 'adit' OR tags->'sport' = 'climbing' OR shop = 'outdoor' OR "natural" in ('peak', 'volcano', 'spring', 'cave_entrance', 'saddle')) AS pois_poly
         <<: *osm2pgsql
     <<: *extents
     properties:

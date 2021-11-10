@@ -91,9 +91,9 @@
       marker-file: url('symbols/tourism/office.svg');
       marker-placement: interior;
       marker-fill: @amenity-red;
-      marker-width: 12;
+      marker-width: 14;
       [zoom >= 16] {
-        marker-width: 14;
+        marker-width: 16;
       }
       [zoom >= 18]{
         marker-width: 18;
@@ -103,7 +103,7 @@
       marker-file: url('symbols/tourism/guidepost.svg');
       marker-placement: interior;
       marker-fill: @amenity-brown;
-      marker-width: 12;
+      marker-width: 14;
       [zoom >= 16] {
         marker-width: 16;
       }
@@ -210,6 +210,19 @@
       }
     }
   }
+  [amenity = 'townhall'][zoom >= 15]{
+    marker-file: url('symbols/amenity/town_hall.svg');
+    marker-placement: interior;
+    marker-clip: false;
+    marker-fill: #000000;
+    marker-width: 12;
+    [zoom >= 16] {
+      marker-width: 13;
+    }
+    [zoom >= 18]{
+      marker-width: 18;
+    }
+  }
   [amenity = 'place_of_worship'][zoom >= 16],
   [man_made = 'cross'][zoom >= 16] {
     marker-file: url('symbols/religion/cross.svg');
@@ -242,6 +255,19 @@
   }
   [aeroway = 'helipad'][zoom >= 15]{
     marker-file: url('symbols/helipad.16.svg');
+    marker-placement: interior;
+    marker-clip: false;
+    marker-fill: @amenity-blu;
+    marker-width: 10;
+    [zoom >= 16] {
+      marker-width: 11;
+    }
+    [zoom >= 18]{
+      marker-width: 16;
+    }
+  }
+  [amenity = 'parking'][zoom >= 16]{
+    marker-file: url('symbols/amenity/parking.svg');
     marker-placement: interior;
     marker-clip: false;
     marker-fill: @amenity-blu;
@@ -431,5 +457,17 @@
         text-dx: 1;
       }*/
     }
+  }
+  [amenity = 'townhall'][zoom >= 16]{
+      text-name: "[name]";
+      text-fill: #000000;
+      text-dy: 5;
+      text-size: @standard-font-size;
+      text-face-name: @book-fonts;
+      text-halo-radius: @standard-halo-radius;
+      text-halo-fill: rgba(255,255,255,0.9);
+      text-wrap-width: @standard-wrap-width;
+      text-placement-type: simple;
+      text-placements: 'N,S,O,W';
   }
 }
