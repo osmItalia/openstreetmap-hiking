@@ -525,38 +525,30 @@
   [natural = 'valley']{
     [zoom >= 10] {
       text-name: "[name]";
-      text-fill: @placenames-light;
+      text-fill: lighten(@placenames-light, 15%);
       text-face-name: @book-fonts;
-      text-halo-radius: @standard-halo-radius;
+      text-halo-radius: @standard-halo-radius * 2;
+      [zoom >= 16] {
+        text-halo-radius: @standard-halo-radius * 1.5;
+      }
       text-halo-fill: rgba(255,255,255,0.6);
       text-placement: line;
       text-transform: uppercase;
-      text-placement-type: simple;
-      text-placements: "N,S,E,W,NE,SE,NW,SW,16,14,12";
-      text-min-distance: 1000;
-      [leng <= 1000] {
-        text-character-spacing: 2;
-        text-size: 4.5;
-        [zoom >= 13] {
-            text-size: 6;
-            text-character-spacing: 3;
-        }
-        [zoom >= 16] {
-            text-size: 8;
-            text-character-spacing: 4;
-            text-halo-radius: @standard-halo-radius * 2;
-        }
-      }
-      [leng > 1000][leng <= 2500]{
+      text-placement-type: dummy;
+      //text-placements: "N,S,E,W,NE,SE,NW,SW,16,14,12";
+      [leng <= 2500]{
         text-character-spacing: 4;
         text-size: 6;
         [zoom >= 13] {
             text-size: 8;
             text-character-spacing: 6;
         }
+        [zoom >= 14] {
+            text-character-spacing: 8;
+        }
         [zoom >= 16] {
             text-size: 10;
-            text-character-spacing: 8;
+            text-character-spacing: 10;
             text-halo-radius: @standard-halo-radius * 2;
         }
       }
@@ -567,50 +559,62 @@
             text-size: 10;
             text-character-spacing: 8;
         }
+        [zoom >= 14] {
+            text-character-spacing: 10;
+        }
         [zoom >= 16] {
             text-size: 12;
-            text-character-spacing: 10;
+            text-character-spacing: 12;
             text-halo-radius: @standard-halo-radius * 2;
         }
       }
       [leng > 5000][leng <= 10000]{
         text-character-spacing: 8;
-        text-size: 14;
+        text-size: 10;
         [zoom >= 13] {
-            text-size: 16;
-            text-character-spacing: 10;
+            text-size: 12;
+            text-character-spacing: 12;
+        }
+        [zoom >= 14] {
+            text-character-spacing: 14;
         }
         [zoom >= 16] {
-            text-size: 18;
-            text-character-spacing: 12;
+            text-size: 14;
+            text-character-spacing: 16;
             text-halo-radius: @standard-halo-radius * 2;
         }
       }
       [leng > 10000][leng <= 25000]{
         text-character-spacing: 12;
-        text-size: 18;
+        text-size: 12;
         [zoom >= 13] {
-            text-size: 20;
+            text-size: 14;
             text-character-spacing: 14;
             text-halo-radius: @standard-halo-radius * 2;
         }
-        [zoom >= 16] {
-            text-size: 22;
+        [zoom >= 14] {
             text-character-spacing: 16;
+        }
+        [zoom >= 16] {
+            text-size: 16;
+            text-character-spacing: 18;
             text-halo-radius: @standard-halo-radius * 3;
         }
       }
       [leng > 25000] {
-        text-character-spacing: 14;
-        text-size: 20;
+        text-character-spacing: 18;
+        text-size: 16;
         [zoom >= 13] {
-            text-size: 22;
-            text-character-spacing: 16;
+            text-size: 18;
+            text-character-spacing: 22;
             text-halo-radius: @standard-halo-radius * 2;
         }
+        [zoom >= 14] {
+            text-character-spacing: 24;
+        }
         [zoom >= 16] {
-            text-size: 24;
-            text-character-spacing: 18;
+            text-size: 20;
+            text-character-spacing: 26;
             text-halo-radius: @standard-halo-radius * 3;
         }
       }
