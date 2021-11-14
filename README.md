@@ -1,21 +1,18 @@
-Hiking style 
-=============
+#Hiking style
 
 These are the CartoCSS map stylesheets for the hiking style
 
-Prerequisites
-==============
+##Prerequisites
 
-Software
----------
+###Software
 
 * gdal
 * cartocss
 * Mapnik
 * PostGIS
 
-Data
------
+###Data
+
 * OpenStreetMap data loaded in PostGIS database called `gis` with prefix name `planet_osm`
 * contour lines loadded in PostGIS database called `gis` with table name `contour`
 * a hillshade raster file called `hillshade.tif` located in `layers` folder
@@ -24,8 +21,7 @@ Data
 
 This tree rasters can be created using gdaldem software
 
-License
-========
+##License
 
 This stylesheets is released under Creative Commons Attribution-ShareAlike 4.0 International (CC-BY-SA 4.0).
 
