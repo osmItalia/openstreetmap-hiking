@@ -42,7 +42,7 @@ Finally we create the slope map, it requires two steps, first create the slope m
 ```
 gdaldem slope input_dtm.tif output_slope.tif
 
-gdaldem color-relief -co compress=lzw -co predictor=2 output_slope.tif script/slope-relief.txt layers/slope.tif
+gdaldem color-relief -co compress=lzw -co predictor=2 output_slope.tif scripts/slope-relief.txt layers/slope.tif
 gdaladdo --config COMPRESS_OVERVIEW JPEG layers/slope.tif
 rm -f output_slope.tif
 ```
