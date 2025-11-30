@@ -51,13 +51,13 @@ The last layer required to represent the terrain model is the contour layer, whi
 Two values must be set, the name of the column that will contain the altitude values and the interval between the lines, in our case the value is 100 metres
 
 ```
-gdal_contour -i 100 -a elev input_dtm.tif contour.shp
+gdal_contour -i 100 -a elev -f GeoJSONSeq input_dtm.tif contour.jsonl
 ```
 
 Now we need to import the output shapefile into PostgreSQL database
 
 ```
-shp2pgsql -g wkb_geometry contour.shp contour | psql gis
+ogr2ogr -f PostgreSQL 'PG:' countour.jsonl -nln contour
 ```
 
 ## Custom index
