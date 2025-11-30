@@ -91,7 +91,7 @@ function osm2pgsql.process_way(object)
         row.rel_networks = table.concat(nets, ',')
     end
     if row.rel_ids then
-        tables.hiking_ways:add_row(row)
+        tables.hiking_ways:insert(row)
     end
 end
 
@@ -108,7 +108,7 @@ end
 
 function osm2pgsql.process_relation(object)
     if object.tags.type == 'route' and object.tags.route == 'hiking' then
-        tables.hiking_routes:add_row({
+        tables.hiking_routes:insert({
 	          name = object.tags.name,
 	          cai_scale = object.tags.cai_scale,
 	          osmc_symbol = object.tags['osmc:symbol'],
