@@ -1,5 +1,21 @@
 -- The next functions will create two layers with info about hiking routes
 
+-- Europe bounding box (approximate)
+local EUROPE_BBOX = {
+    min_lon = -31.0,  -- West (Atlantic/Azores)
+    max_lon = 70.0,   -- East (Urals)
+    min_lat = 27.0,   -- South (Canary Islands)
+    max_lat = 82.0    -- North (Svalbard)
+}
+
+local function is_in_europe(object)
+    local lon, lat = object:get_bbox()
+    if not lon or not lat then
+        return false
+    end
+    return lon >= EUROPE_BBOX.min_lon and lon <= EUROPE_BBOX.max_lon
+       and lat >= EUROPE_BBOX.min_lat and lat <= EUROPE_BBOX.max_lat
+end
 
 local previous_process_way = osm2pgsql.process_way
 local previous_process_relation = osm2pgsql.process_relation
@@ -151,6 +167,11 @@ end
 
 local function process_hiking_relation(object)
     if object.tags.type ~= 'route' or object.tags.route ~= 'hiking' then
+        return
+    end
+
+    -- Only process hiking routes in Europe
+    if not is_in_europe(object) then
         return
     end
 
