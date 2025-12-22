@@ -3,5 +3,18 @@
 CREATE INDEX contour_geom
   ON contour USING GIST (wkb_geometry);
 
-CREATE INDEX relation_id_index 
-  ON hiking_routes (relation_id );
+CREATE INDEX idx_hiking_routes_osm_id
+  ON hiking_routes (osm_id);
+
+CREATE INDEX idx_hiking_relation_members_way_id
+  ON hiking_relation_members (way_id);
+
+CREATE INDEX idx_hiking_relation_members_osm_id
+  ON hiking_relation_members (osm_id);
+
+CREATE INDEX idx_hiking_ways_geom
+  ON hiking_ways USING GIST (geom);
+
+ANALYZE hiking_ways;
+ANALYZE hiking_routes;
+ANALYZE hiking_relation_members;
