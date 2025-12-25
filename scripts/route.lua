@@ -20,7 +20,6 @@ end
 local previous_process_way = osm2pgsql.process_way
 local previous_process_relation = osm2pgsql.process_relation
 local previous_select_relation_members = osm2pgsql.select_relation_members
-local way_info = {}
 
 local tables = {}
 
@@ -147,17 +146,11 @@ local function process_hiking_way(object)
         geom = object:as_linestring(),
     }
     
-    local info = way_info[object.id]
-    if info then
-        row.rel_refs = table.concat(info.refs, ';')
-        row.rel_networks = table.concat(info.networks, ';')
-        row.rel_ids = '{' .. table.concat(info.ids, ',') .. '}'
-    end
 
     sanitize_fields(row, {
         'trail_visibility', 'sac_scale', 'tracktype', 'highway', 'name',
         'ref', 'access', 'incline', 'surface', 'bicycle', 'horse',
-        'tunnel', 'covered', 'bridge', 'rel_refs', 'rel_networks'
+        'tunnel', 'covered', 'bridge'
     })
     tables.hiking_ways:insert(row)
 end
@@ -217,13 +210,6 @@ local function process_hiking_relation(object)
                 rel_ref = object.tags.ref,
                 rel_network = object.tags.network
             })
-
-            if not way_info[member.ref] then
-                way_info[member.ref] = { refs = {}, ids = {}, networks = {} }
-            end
-            table.insert(way_info[member.ref].refs, object.tags.ref or '')
-            table.insert(way_info[member.ref].ids, object.id)
-            table.insert(way_info[member.ref].networks, object.tags.network or '')
         end
     end
 end
