@@ -53,6 +53,7 @@ Layer:
     geometry: raster
     band: 1
     <<: *extents
+    srs: "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
     Datasource: 
       type: gdal
       file: layers/hillshade.tif
@@ -60,6 +61,7 @@ Layer:
     geometry: raster
     band: 1
     <<: *extents
+    srs: "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
     Datasource: 
       type: gdal
       file: layers/slope.tif
@@ -67,6 +69,7 @@ Layer:
     geometry: raster
     band: 1
     <<: *extents
+    srs: "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
     Datasource:
         type: gdal
         file: layers/relief.tif
@@ -192,6 +195,7 @@ Layer:
         geometry_field: wkb_geometry
     geometry: linestring
     <<: *extents
+    srs: "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
   - id: contour-major
     Datasource: 
         <<: *osm2pgsql
@@ -203,6 +207,7 @@ Layer:
         geometry_field: wkb_geometry
     geometry: linestring
     <<: *extents
+    srs: "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
   - id: water-lines-casing
     geometry: linestring
     <<: *extents
