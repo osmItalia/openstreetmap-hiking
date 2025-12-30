@@ -66,6 +66,7 @@ tables.hiking_ways = osm2pgsql.define_table({
         { column = 'covered', type= 'text' },
         { column = 'bridge', type= 'text' },
         { column = 'geom', type = 'linestring' },
+        { column = 'is_hiking', type = 'boolean' },
     }
 })
 

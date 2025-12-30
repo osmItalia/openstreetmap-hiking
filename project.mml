@@ -109,7 +109,7 @@ Layer:
             way, name, religion, way_pixels, is_building,
             COALESCE(aeroway, amenity, wetland, power, landuse, leisure, man_made, "natural", shop, tourism, highway, railway) AS feature
           FROM (SELECT
-              way, COALESCE((tags->('name:it')), name, '') as name,
+              way, name_it as name,
               ('aeroway_' || (CASE WHEN aeroway IN ('apron', 'aerodrome') THEN aeroway END)) AS aeroway,
               ('amenity_' || (CASE WHEN amenity IN ('bicycle_parking', 'motorcycle_parking', 'university', 'college', 'school', 'taxi',
                                                     'hospital', 'kindergarten', 'grave_yard', 'prison', 'place_of_worship', 'clinic', 'ferry_terminal',
@@ -250,7 +250,7 @@ Layer:
         (SELECT
             way,
             waterway,
-            COALESCE((tags->('name:it')), name, '') as name,
+            name_it as name,
             CASE WHEN tags->'intermittent' IN ('yes')
               OR tags->'seasonal' IN ('yes', 'spring', 'summer', 'autumn', 'winter', 'wet_season', 'dry_season')
               THEN 'yes' ELSE 'no' END AS int_intermittent,
@@ -408,16 +408,33 @@ Layer:
         table: (SELECT geom,
                  (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, 
                  ref, name, bicycle, horse, network, cai, route_color
-                FROM (SELECT 
-                 (CASE WHEN r.cai_scale IS NOT NULL THEN w.geom WHEN r.cai_scale IS NULL THEN ST_reverse(w.geom) END) as geom,
+                 FROM (
+                 SELECT
+                 w.geom as geom,
                  ('highway_' || w.highway) AS feature, w.ref, w.name, w.bicycle, w.horse,
                  (CASE WHEN m.rel_network LIKE '%iwn%' THEN 'iwn' WHEN m.rel_network LIKE '%nwn%' THEN 'nwn' WHEN m.rel_network LIKE '%rwn%' THEN 'rwn' WHEN m.rel_network LIKE '%lwn%' THEN 'lwn' END) as network,
-                 (CASE WHEN r.cai_scale IS NOT NULL THEN true WHEN r.cai_scale IS NULL THEN false END) as cai,
-                 (CASE WHEN r.cai_scale IS NOT NULL THEN 'red' WHEN r.cai_scale IS NULL THEN 'purple' END) as route_color
+                 'true' as cai,
+                 'red' as route_color
                  FROM hiking_ways AS w
                  JOIN hiking_relation_members AS m ON w.osm_id = m.way_id
                  JOIN hiking_routes AS r ON m.osm_id = r.osm_id
-                  WHERE (tunnel = 'yes' OR tunnel = 'building_passage' OR covered = 'yes')
+                  WHERE r.cai_scale IS NOT NULL
+                    AND w.is_hiking = TRUE
+                    AND (tunnel = 'yes' OR tunnel = 'building_passage' OR covered = 'yes')
+                    AND w.geom && !bbox!
+                 UNION ALL
+                 SELECT
+                 ST_Reverse(w.geom) as geom,
+                 ('highway_' || w.highway) AS feature, w.ref, w.name, w.bicycle, w.horse,
+                 (CASE WHEN m.rel_network LIKE '%iwn%' THEN 'iwn' WHEN m.rel_network LIKE '%nwn%' THEN 'nwn' WHEN m.rel_network LIKE '%rwn%' THEN 'rwn' WHEN m.rel_network LIKE '%lwn%' THEN 'lwn' END) as network,
+                 'false' as cai,
+                 'purple' as route_color
+                 FROM hiking_ways AS w
+                 JOIN hiking_relation_members AS m ON w.osm_id = m.way_id
+                 JOIN hiking_routes AS r ON m.osm_id = r.osm_id
+                 WHERE r.cai_scale IS NULL
+                    AND w.is_hiking = TRUE
+                    AND (tunnel = 'yes' OR tunnel = 'building_passage' OR covered = 'yes')
                     AND w.geom && !bbox!)
                 as query) as routetunnels
         geometry_field: geom
@@ -674,20 +691,38 @@ Layer:
                  (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, 
                network, ref, name, bicycle, horse, cai, route_color
                FROM ( 
-               SELECT 
-               (CASE WHEN r.cai_scale IS NOT NULL THEN w.geom WHEN r.cai_scale IS NULL THEN ST_reverse(w.geom) END) as geom,
-               ('highway_' || w.highway) AS feature, w.ref, w.name, w.bicycle, w.horse,
-               (CASE WHEN m.rel_network LIKE '%iwn%' THEN 'iwn' WHEN m.rel_network LIKE '%nwn%' THEN 'nwn' WHEN m.rel_network LIKE '%rwn%' THEN 'rwn' WHEN m.rel_network LIKE '%lwn%' THEN 'lwn' END) as network,
-               (CASE WHEN r.cai_scale IS NOT NULL THEN 'true' WHEN r.cai_scale IS NULL THEN 'false' END) as cai,
-               (CASE WHEN r.cai_scale IS NOT NULL THEN 'red' WHEN r.cai_scale IS NULL THEN 'purple' END) as route_color
-                 FROM hiking_ways AS w
-                 JOIN hiking_relation_members AS m ON w.osm_id = m.way_id
-                 JOIN hiking_routes AS r ON m.osm_id = r.osm_id
-                  WHERE (tunnel IS NULL OR NOT tunnel IN ('yes', 'building_passage'))
-                      AND (covered IS NULL OR NOT covered = 'yes')
-                      AND (bridge IS NULL OR NOT bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct'))
-                      AND w.geom && !bbox!)
-               as query) as route
+                   SELECT
+                   w.geom as geom,
+                   ('highway_' || w.highway) AS feature, w.ref, w.name, w.bicycle, w.horse,
+                   (CASE WHEN m.rel_network LIKE '%iwn%' THEN 'iwn' WHEN m.rel_network LIKE '%nwn%' THEN 'nwn' WHEN m.rel_network LIKE '%rwn%' THEN 'rwn' WHEN m.rel_network LIKE '%lwn%' THEN 'lwn' END) as network,
+                   'true' as cai,
+                   'red' as route_color
+                   FROM hiking_ways AS w
+                   JOIN hiking_relation_members AS m ON w.osm_id = m.way_id
+                   JOIN hiking_routes AS r ON m.osm_id = r.osm_id
+                   WHERE r.cai_scale IS NOT NULL
+                     AND w.is_hiking = TRUE
+                     AND (tunnel IS NULL OR NOT tunnel IN ('yes', 'building_passage'))
+                     AND (covered IS NULL OR NOT covered = 'yes')
+                     AND (bridge IS NULL OR NOT bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct'))
+                     AND w.geom && !bbox!
+                   UNION ALL
+                   SELECT
+                   ST_Reverse(w.geom) as geom,
+                   ('highway_' || w.highway) AS feature, w.ref, w.name, w.bicycle, w.horse,
+                   (CASE WHEN m.rel_network LIKE '%iwn%' THEN 'iwn' WHEN m.rel_network LIKE '%nwn%' THEN 'nwn' WHEN m.rel_network LIKE '%rwn%' THEN 'rwn' WHEN m.rel_network LIKE '%lwn%' THEN 'lwn' END) as network,
+                   'false' as cai,
+                   'purple' as route_color
+                   FROM hiking_ways AS w
+                   JOIN hiking_relation_members AS m ON w.osm_id = m.way_id
+                   JOIN hiking_routes AS r ON m.osm_id = r.osm_id
+                   WHERE r.cai_scale IS NULL
+                     AND w.is_hiking = TRUE
+                     AND (tunnel IS NULL OR NOT tunnel IN ('yes', 'building_passage'))
+                     AND (covered IS NULL OR NOT covered = 'yes')
+                     AND (bridge IS NULL OR NOT bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct'))
+                     AND w.geom && !bbox!)
+                as query) as route
         geometry_field: geom
         <<: *osm2pgsql
     <<: *extents
@@ -993,16 +1028,33 @@ Layer:
     Datasource:
         table: (SELECT geom, (CASE WHEN substr(feature, length(feature)-3, 4) = 'link' THEN substr(feature, 0, length(feature)-4) ELSE feature END) AS feature, network, ref, name, bicycle, horse, cai, route_color
                FROM
-                 (SELECT 
-                  (CASE WHEN r.cai_scale IS NOT NULL THEN w.geom WHEN r.cai_scale IS NULL THEN ST_reverse(w.geom) END) as geom,
-                  (CASE WHEN m.rel_network LIKE '%iwn%' THEN 'iwn' WHEN m.rel_network LIKE '%nwn%' THEN 'nwn' WHEN m.rel_network LIKE '%rwn%' THEN 'rwn' WHEN m.rel_network LIKE '%lwn%' THEN 'lwn' END) as network,
-                  w.ref, w.name, w.bicycle, w.horse, ('highway_' || w.highway) AS feature,
-                  (CASE WHEN r.cai_scale IS NOT NULL THEN true WHEN r.cai_scale IS NULL THEN false END) as cai,
-                  (CASE WHEN r.cai_scale IS NOT NULL THEN 'red' WHEN r.cai_scale IS NULL THEN 'purple' END) as route_color
-                  FROM hiking_ways AS w
-                  JOIN hiking_relation_members AS m ON w.osm_id = m.way_id
-                  JOIN hiking_routes AS r ON m.osm_id = r.osm_id
-                  WHERE w.bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct'))
+                  (SELECT
+                   w.geom as geom,
+                   (CASE WHEN m.rel_network LIKE '%iwn%' THEN 'iwn' WHEN m.rel_network LIKE '%nwn%' THEN 'nwn' WHEN m.rel_network LIKE '%rwn%' THEN 'rwn' WHEN m.rel_network LIKE '%lwn%' THEN 'lwn' END) as network,
+                   w.ref, w.name, w.bicycle, w.horse, ('highway_' || w.highway) AS feature,
+                   'true' as cai,
+                   'red' as route_color
+                   FROM hiking_ways AS w
+                   JOIN hiking_relation_members AS m ON w.osm_id = m.way_id
+                   JOIN hiking_routes AS r ON m.osm_id = r.osm_id
+                   WHERE r.cai_scale IS NOT NULL
+                     AND w.is_hiking = TRUE
+                     AND w.bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct')
+                     AND w.geom && !bbox!
+                   UNION ALL
+                   SELECT
+                   ST_Reverse(w.geom) as geom,
+                   (CASE WHEN m.rel_network LIKE '%iwn%' THEN 'iwn' WHEN m.rel_network LIKE '%nwn%' THEN 'nwn' WHEN m.rel_network LIKE '%rwn%' THEN 'rwn' WHEN m.rel_network LIKE '%lwn%' THEN 'lwn' END) as network,
+                   w.ref, w.name, w.bicycle, w.horse, ('highway_' || w.highway) AS feature,
+                   'false' as cai,
+                   'purple' as route_color
+                   FROM hiking_ways AS w
+                   JOIN hiking_relation_members AS m ON w.osm_id = m.way_id
+                   JOIN hiking_routes AS r ON m.osm_id = r.osm_id
+                   WHERE r.cai_scale IS NULL
+                     AND w.is_hiking = TRUE
+                     AND w.bridge IN ('yes', 'boardwalk', 'cantilever', 'covered', 'low_water_crossing', 'movable', 'trestle', 'viaduct')
+                     AND w.geom && !bbox!)
                 as query) AS bridges
         geometry_field: geom
         <<: *osm2pgsql
@@ -1302,10 +1354,10 @@ Layer:
         (SELECT
             ST_PointOnSurface(way) AS way,
             way_area/NULLIF(POW(!scale_denominator!*0.001*0.28,2),0) AS way_pixels,
-            COALESCE((tags->('name:it')),  name, '') as name
+            name_it as name
           FROM planet_osm_polygon
           WHERE ST_PointOnSurface(way) && !bbox!
-            AND COALESCE((tags->('name:it')),  name, NULL) IS NOT NULL
+            AND name_it IS NOT NULL
             AND boundary = 'administrative'
             AND admin_level = '2'
             AND way_area > 100*POW(!scale_denominator!*0.001*0.28,2)
@@ -1323,14 +1375,14 @@ Layer:
       table: |-
         (SELECT
             way,
-            COALESCE((tags->('name:it')),  name, '') as name,
+            name_it as name,
             CASE
               WHEN (tags->'population' ~ '^[0-9]{1,8}$') THEN (tags->'population')::INTEGER ELSE 0
             END as population,
             round(ascii(md5(osm_id::text)) / 55) AS dir -- base direction factor on geometry to be consistent across metatiles
           FROM planet_osm_point
           WHERE place IN ('city', 'town', 'village', 'hamlet')
-            AND COALESCE((tags->('name:it')),  name, NULL) IS NOT NULL
+            AND name_it IS NOT NULL
             AND tags @> 'capital=>yes'
           ORDER BY population DESC
         ) AS capital_names
@@ -1346,12 +1398,12 @@ Layer:
         (SELECT
             ST_PointOnSurface(way) AS way,
             way_area/NULLIF(POW(!scale_denominator!*0.001*0.28,2),0) AS way_pixels,
-            COALESCE((tags->('name:it')),  name, '') as name,
+            name_it as name,
             admin_level,
             ref
           FROM planet_osm_polygon
           WHERE ST_PointOnSurface(way) && !bbox!
-            AND COALESCE((tags->('name:it')),  name, NULL) IS NOT NULL
+            AND name_it IS NOT NULL
             AND boundary = 'administrative'
             AND admin_level = '4'
             AND way_area > 3000*POW(!scale_denominator!*0.001*0.28,2)
@@ -1381,7 +1433,7 @@ Layer:
                 osm_id,
                 way,
                 place,
-                COALESCE((tags->('name:it')),  name, '') as name,
+                name_it as name,
                 (
                   (CASE
                     WHEN (tags->'population' ~ '^[0-9]{1,8}$') THEN (tags->'population')::INTEGER
@@ -1397,7 +1449,7 @@ Layer:
                 ) AS score
               FROM planet_osm_point
               WHERE place IN ('city', 'town')
-                AND COALESCE((tags->('name:it')),  name, NULL) IS NOT NULL
+                AND name_it IS NOT NULL
                 AND NOT (tags @> 'capital=>yes')
             ) as p
           ORDER BY score DESC, length(name) DESC, name
@@ -1415,13 +1467,13 @@ Layer:
         (SELECT
             way,
             place,
-            COALESCE((tags->('name:it')),  name, '') as name
+            name_it as name
           FROM planet_osm_point
           WHERE place IN ('village', 'hamlet')
-             AND COALESCE((tags->('name:it')),  name, NULL) IS NOT NULL
+             AND name_it IS NOT NULL
              AND NOT tags @> 'capital=>yes'
              OR (place IN ('suburb', 'quarter', 'neighbourhood', 'isolated_dwelling', 'farm')
-             ) AND COALESCE((tags->('name:it')),  name, NULL) IS NOT NULL
+             ) AND name_it IS NOT NULL
           ORDER BY CASE
               WHEN place = 'suburb' THEN 7
               WHEN place = 'village' THEN 6
@@ -1453,7 +1505,7 @@ Layer:
           FROM
           (SELECT
               ST_PointOnSurface(way) AS way,
-              COALESCE((tags->('name:it')),  name, '') as name,
+              name_it as name,
               ref,
               railway,
               aerialway,
@@ -1465,7 +1517,7 @@ Layer:
           UNION ALL
           SELECT
               way,
-              COALESCE((tags->('name:it')),  name, '') as name,
+              name_it as name,
               ref,
               railway,
               aerialway,
@@ -1499,7 +1551,7 @@ Layer:
             highway,
             junction,
             ref,
-            COALESCE((tags->('name:it')),  name, '') as name,
+            name_it as name,
             NULL AS way_pixels
           FROM planet_osm_point
           WHERE way && !bbox!
@@ -1510,7 +1562,7 @@ Layer:
             highway,
             junction,
             ref,
-            COALESCE((tags->('name:it')),  name, '') as name,
+            name_it as name,
             way_area/NULLIF(POW(!scale_denominator!*0.001*0.28,2),0) AS way_pixels
           FROM planet_osm_polygon
           WHERE way && !bbox! -- Not ST_PointOnSurface(way) because name might be NULL
@@ -1530,10 +1582,10 @@ Layer:
             ST_PointOnSurface(way) AS way,
             way_area/NULLIF(POW(!scale_denominator!*0.001*0.28,2),0) AS way_pixels,
             man_made,
-            COALESCE((tags->('name:it')),  name, '') as name
+            name_it as name
           FROM planet_osm_polygon
           WHERE ST_PointOnSurface(way) && !bbox!
-            AND COALESCE((tags->('name:it')),  name, NULL) IS NOT NULL
+            AND name_it IS NOT NULL
             AND man_made = 'bridge'
             AND way_area > 125*POW(!scale_denominator!*0.001*0.28,2)
             AND way_area < 768000*POW(!scale_denominator!*0.001*0.28,2)
@@ -1550,11 +1602,11 @@ Layer:
         (SELECT
             ST_PointOnSurface(way) AS way,
             way_area/NULLIF(POW(!scale_denominator!*0.001*0.28,2),0) AS way_pixels,
-            COALESCE((tags->('name:it')),  name, '') as name,
+            name_it as name,
             admin_level
           FROM planet_osm_polygon
           WHERE ST_PointOnSurface(way) && !bbox!
-            AND COALESCE((tags->('name:it')),  name, NULL) IS NOT NULL
+            AND name_it IS NOT NULL
             AND boundary = 'administrative'
             AND admin_level IN ('5', '6')
             AND way_area > 12000*POW(!scale_denominator!*0.001*0.28,2)
@@ -1595,10 +1647,10 @@ Layer:
             ST_PointOnSurface(way) AS way,
             way_area/NULLIF(POW(!scale_denominator!*0.001*0.28,2),0) AS way_pixels,
             highway,
-            COALESCE((tags->('name:it')), name, '') as name
+            name_it as name
           FROM planet_osm_polygon
           WHERE ST_PointOnSurface(way) && !bbox!
-            AND COALESCE((tags->('name:it')), name, NULL) IS NOT NULL
+            AND name_it IS NOT NULL
             AND (highway IN ('pedestrian', 'footway', 'service', 'living_street', 'platform')
               OR (railway IN ('platform')
                   AND (tags->'location' NOT IN ('underground') OR (tags->'location') IS NULL)
@@ -1621,7 +1673,7 @@ Layer:
             CASE WHEN substr(highway, length(highway)-4, 5) = '_link' THEN substr(highway, 0, length(highway)-4) ELSE highway END,
             CASE WHEN (tunnel = 'yes' OR tunnel = 'building_passage' OR covered = 'yes') THEN 'yes' ELSE 'no' END AS tunnel,
             construction,
-            COALESCE((tags->('name:it')), name, '') as name,
+            name_it as name,
             CASE
               WHEN oneway IN ('yes', '-1') THEN oneway
               WHEN junction IN ('roundabout') AND (oneway IS NULL OR NOT oneway IN ('no', 'reversible')) THEN 'yes'
@@ -1630,7 +1682,7 @@ Layer:
           FROM planet_osm_line l
           WHERE highway IN ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary', 'secondary_link', 'tertiary',
                             'tertiary_link', 'residential', 'unclassified', 'road', 'service', 'pedestrian', 'raceway', 'living_street', 'construction')
-            AND (COALESCE((tags->('name:it')), name, NULL) IS NOT NULL
+            AND (name_it IS NOT NULL
               OR oneway IN ('yes', '-1')
               OR junction IN ('roundabout'))
           ORDER BY
@@ -1653,7 +1705,7 @@ Layer:
             way,
             highway,
             construction,
-            COALESCE((tags->('name:it')), name, '') as name,
+            name_it as name,
             CASE
               WHEN oneway IN ('yes', '-1') THEN oneway
               WHEN junction IN ('roundabout') AND (oneway IS NULL OR NOT oneway IN ('no', 'reversible')) THEN 'yes'
@@ -1662,7 +1714,7 @@ Layer:
             bicycle
           FROM planet_osm_line
           WHERE highway IN ('bridleway', 'footway', 'cycleway', 'path', 'track', 'steps', 'construction')
-            AND (COALESCE((tags->('name:it')), name, NULL) IS NOT NULL
+            AND (name_it IS NOT NULL
               OR oneway IN ('yes', '-1')
               OR junction IN ('roundabout'))
         ) AS paths_text_name
@@ -1771,11 +1823,11 @@ Layer:
                                        THEN boundary END,
               'leisure_' || CASE WHEN leisure IN ('nature_reserve') THEN leisure END
             ) AS feature,
-            COALESCE((tags->('name:it')), name, '') as name,
+            name_it as name,
             CASE WHEN building = 'no' OR building IS NULL THEN 'no' ELSE 'yes' END AS is_building -- always no with the where conditions
           FROM planet_osm_polygon
           WHERE ST_PointOnSurface(way) && !bbox!
-            AND COALESCE((tags->('name:it')), name, NULL) IS NOT NULL
+            AND name_it IS NOT NULL
             AND (landuse IN ('forest', 'farmland')
               OR "natural" IN ('wood', 'glacier', 'sand', 'scree', 'shingle', 'bare_rock', 'water', 'bay', 'strait')
               OR "place" IN ('island')
@@ -1799,7 +1851,7 @@ Layer:
             NULL as way_pixels,
             COALESCE('aerialway_' || aerialway, 'attraction_' || CASE WHEN tags @> 'attraction=>water_slide' THEN 'water_slide' END, 'leisure_' || leisure, 'man_made_' || man_made, 'waterway_' || waterway, 'natural_' || "natural") AS feature,
             access,
-            COALESCE((tags->('name:it')), name, '') as name,
+            name_it as name,
             tags->'operator' as operator,
             ref,
             NULL AS way_area,
@@ -1814,7 +1866,7 @@ Layer:
               OR leisure IN ('slipway', 'track')
               OR waterway IN ('dam', 'weir')
               OR "natural" IN ('arete', 'cliff', 'ridge'))
-            AND COALESCE((tags->('name:it')), name, NULL) IS NOT NULL
+            AND name_it IS NOT NULL
         ) AS text_line
     properties:
         minzoom: 10
@@ -1908,16 +1960,34 @@ Layer:
   - id: route-text
     geometry: linestring
     Datasource:
-        table: (SELECT
-                (CASE WHEN r.cai_scale IS NOT NULL THEN w.geom WHEN r.cai_scale IS NULL THEN ST_reverse(w.geom) END) as geom,
-                r.ref,
-                r.name,
-                (CASE WHEN r.cai_scale IS NOT NULL THEN 'red' WHEN r.cai_scale IS NULL THEN 'purple' END) as route_color,
-                r.tags->'osmc:symbol' as symbol
-                FROM hiking_ways AS w
-                JOIN hiking_relation_members AS m ON w.osm_id = m.way_id
-                JOIN hiking_routes AS r ON m.osm_id = r.osm_id
-               ) AS route_text
+        table: (SELECT geom, ref, name, route_color, symbol
+                FROM (
+                    SELECT
+                    w.geom as geom,
+                    r.ref,
+                    r.name,
+                    'red' as route_color,
+                    r.tags->'osmc:symbol' as symbol
+                    FROM hiking_ways AS w
+                    JOIN hiking_relation_members AS m ON w.osm_id = m.way_id
+                    JOIN hiking_routes AS r ON m.osm_id = r.osm_id
+                    WHERE r.cai_scale IS NOT NULL
+                      AND w.is_hiking = TRUE
+                      AND w.geom && !bbox!
+                    UNION ALL
+                    SELECT
+                    ST_Reverse(w.geom) as geom,
+                    r.ref,
+                    r.name,
+                    'purple' as route_color,
+                    r.tags->'osmc:symbol' as symbol
+                    FROM hiking_ways AS w
+                    JOIN hiking_relation_members AS m ON w.osm_id = m.way_id
+                    JOIN hiking_routes AS r ON m.osm_id = r.osm_id
+                    WHERE r.cai_scale IS NULL
+                      AND w.is_hiking = TRUE
+                      AND w.geom && !bbox!
+                ) AS q) AS route_text
         geometry_field: geom
         <<: *osm2pgsql
     <<: *extents
@@ -1929,7 +1999,7 @@ Layer:
     Datasource:
         <<: *osm2pgsql
         table: (SELECT
-               way, COALESCE((tags->('name:it')), name, '') as name, "natural", ST_Length(way) as leng
+               way, name_it as name, "natural", ST_Length(way) as leng
                FROM planet_osm_line
                WHERE "natural" = 'valley'
                ) AS lines_text
@@ -2001,13 +2071,13 @@ Layer:
             tags->'highspeed' as highspeed,
             tags->'usage' as usage,
             construction,
-            COALESCE((tags->('name:it')), name, '') as name
+            name_it as name
           FROM planet_osm_line l
           WHERE railway IN ('rail', 'subway', 'narrow_gauge', 'light_rail', 'preserved', 'funicular',
                             'monorail', 'miniature', 'tram', 'disused', 'construction')
             AND (tunnel IS NULL OR NOT tunnel IN ('yes', 'building_passage'))
             AND highway IS NULL -- Prevent duplicate rendering
-            AND COALESCE((tags->('name:it')), name, NULL) IS NOT NULL
+            AND name_it IS NOT NULL
           ORDER BY
             z_order DESC, -- put important rails first
             COALESCE(layer, 0), -- put top layered rails first
@@ -2024,12 +2094,12 @@ Layer:
       <<: *osm2pgsql
       table: |-
         (SELECT
-            COALESCE((tags->('name:it')), name, '') as name,
+            name_it as name,
             ST_PointOnSurface(way) AS way,
             way_area/NULLIF(POW(!scale_denominator!*0.001*0.28,2),0) AS way_pixels
           FROM planet_osm_polygon
           WHERE ST_PointOnSurface(way) && !bbox!
-            AND COALESCE((tags->('name:it')), name, NULL) IS NOT NULL
+            AND name_it IS NOT NULL
             AND building IS NOT NULL
             AND building NOT IN ('no')
             AND way_area < 4000000*POW(!scale_denominator!*0.001*0.28,2)
@@ -2080,7 +2150,7 @@ Layer:
             way,
             waterway,
             lock,
-            COALESCE((tags->('name:it')), name, '') as name,
+            name_it as name,
             "natural",
             tags->'lock_name' AS lock_name,
             CASE WHEN tags->'intermittent' IN ('yes')
@@ -2093,7 +2163,7 @@ Layer:
           WHERE (waterway IN ('river', 'canal', 'stream', 'drain', 'ditch')
                  OR "natural" IN ('bay', 'strait'))
             AND (tunnel IS NULL OR tunnel != 'culvert')
-            AND COALESCE((tags->('name:it')), name, NULL) IS NOT NULL
+            AND name_it IS NOT NULL
           ORDER BY COALESCE(layer,0)
         ) AS water_lines_text
     properties:
@@ -2106,13 +2176,13 @@ Layer:
       table: |-
         (SELECT
             way,
-            COALESCE((tags->('name:it')), name, '') as name,
+            name_it as name,
             admin_level,
             way_area/NULLIF(POW(!scale_denominator!*0.001*0.28,2),0) AS way_pixels
           FROM planet_osm_polygon
           WHERE boundary = 'administrative'
             AND admin_level IN ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10')
-            AND COALESCE((tags->('name:it')), name, NULL) IS NOT NULL
+            AND name_it IS NOT NULL
             AND osm_id < 0
             AND way_area > 196000*POW(!scale_denominator!*0.001*0.28,2)
           ORDER BY admin_level::integer ASC, way_area DESC
@@ -2127,7 +2197,7 @@ Layer:
       table: |-
         (SELECT
             way,
-            COALESCE((tags->('name:it')), name, '') as name,
+            name_it as name,
             boundary,
             tags->'protect_class' AS protect_class,
             way_area/NULLIF(POW(!scale_denominator!*0.001*0.28,2),0) AS way_pixels
@@ -2135,7 +2205,7 @@ Layer:
           WHERE (boundary IN ('aboriginal_lands', 'national_park')
                  OR leisure = 'nature_reserve'
                  OR (boundary = 'protected_area' AND tags->'protect_class' IN ('1','1a','1b','2','3','4','5','6')))
-            AND COALESCE((tags->('name:it')), name, NULL) IS NOT NULL
+            AND name_it IS NOT NULL
         ) AS protected_areas_text
     properties:
       minzoom: 13
