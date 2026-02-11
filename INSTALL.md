@@ -21,10 +21,16 @@ Starting from a DTM, three raster layers are created to be used as background: a
 
 You can create these layers using GDAL's tool `gdaldem`. For each raster we had the overview to speed up raster reading.
 
+First we need to reproject the DTM to Web Mercator (EPSG:3857) to avoid reprojection on the fly:
+
+```
+gdalwarp -t_srs EPSG:3857 -r bilinear -co COMPRESS=LZW -co PREDICTOR=2 input_dtm.tif input_dtm_3857.tif
+```
+
 First we create the shaded relief
 
 ```
-gdaldem hillshade -co compress=lzw -co predictor=2 input_dtm.tif layers/hillshade.tif
+gdaldem hillshade -co compress=lzw -co predictor=2 input_dtm_3857.tif layers/hillshade.tif
 
 gdaladdo --config COMPRESS_OVERVIEW JPEG layers/hillshade.tif
 ```
@@ -32,7 +38,7 @@ gdaladdo --config COMPRESS_OVERVIEW JPEG layers/hillshade.tif
 After the colour relief map
 
 ```
-gdaldem color-relief -co compress=lzw -co predictor=2 input_dtm.tif scripts/color-relief.txt layers/relief.tif
+gdaldem color-relief -co compress=lzw -co predictor=2 input_dtm_3857.tif scripts/color-relief.txt layers/relief.tif
 
 gdaladdo --config COMPRESS_OVERVIEW JPEG layers/relief.tif
 ```
@@ -40,7 +46,7 @@ gdaladdo --config COMPRESS_OVERVIEW JPEG layers/relief.tif
 Finally we create the slope map, it requires two steps, first create the slope map and then colour it.
 
 ```
-gdaldem slope input_dtm.tif output_slope.tif
+gdaldem slope input_dtm_3857.tif output_slope.tif
 
 gdaldem color-relief -co compress=lzw -co predictor=2 output_slope.tif scripts/slope-relief.txt layers/slope.tif
 gdaladdo --config COMPRESS_OVERVIEW JPEG layers/slope.tif
@@ -51,13 +57,14 @@ The last layer required to represent the terrain model is the contour layer, whi
 Two values must be set, the name of the column that will contain the altitude values and the interval between the lines, in our case the value is 100 metres
 
 ```
-gdal_contour -i 100 -a elev -f GeoJSONSeq input_dtm.tif contour.jsonl
+gdal_contour -i 100 -a elev -f GeoJSONSeq input_dtm_3857.tif countour.jsonl
+gzip countour.jsonl
 ```
 
 Now we need to import the output shapefile into PostgreSQL database
 
 ```
-ogr2ogr -f PostgreSQL 'PG:' countour.jsonl -nln contour
+ogr2ogr -f PostgreSQL 'PG:' /vsigzip/countour.jsonl.gz -nln contour -a_srs EPSG:3857
 ```
 
 ## Custom index
