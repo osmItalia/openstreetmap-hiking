@@ -19,58 +19,63 @@ osm2pgsql -d gis --output=flex -S scripts/route.lua ~/path/to/data.osm.pbf
 This style use several several layers derived from a digital terrain model to correctly represent the shape of the terrain.
 Starting from a DTM, three raster layers are created to be used as background: a shaded relief map, a slope map and a colour relief map.
 
-You can create these layers using GDAL's tool `gdaldem`. For each raster we had the overview to speed up raster reading.
+You can create these layers using GDAL's tool `gdaldem`. For each raster we add tiling and overviews to speed up reading and reduce memory usage.
 
-First we need to reproject the DTM to Web Mercator (EPSG:3857) to avoid reprojection on the fly:
+First we need to reproject the DTM to Web Mercator (EPSG:3857) to avoid reprojection on the fly.
+**Note**: All raster commands should be run inside the `layers` directory.
 
-```
-gdalwarp -t_srs EPSG:3857 -r bilinear -co COMPRESS=LZW -co PREDICTOR=2 input_dtm.tif input_dtm_3857.tif
-```
-
-First we create the shaded relief
-
-```
-gdaldem hillshade -co compress=lzw -co predictor=2 input_dtm_3857.tif layers/hillshade.tif
-
-gdaladdo --config COMPRESS_OVERVIEW JPEG layers/hillshade.tif
+```bash
+cd layers
+gdalwarp -t_srs EPSG:3857 -r bilinear -co TILED=YES -co COMPRESS=LZW -co PREDICTOR=2 input_dtm.tif input_dtm_3857.tif
 ```
 
-After the colour relief map
+### 1. Compute Raster Layers
 
-```
-gdaldem color-relief -co compress=lzw -co predictor=2 input_dtm_3857.tif scripts/color-relief.txt layers/relief.tif
+Generate the intermediate raster layers (hillshade, colored relief, and slope). We use standard compression here; optimization happens in the next step.
 
-gdaladdo --config COMPRESS_OVERVIEW JPEG layers/relief.tif
-```
+```bash
+# Hillshade
+gdaldem hillshade -co TILED=YES -co COMPRESS=DEFLATE -co PREDICTOR=2 input_dtm_3857.tif hillshade.tif
 
-Finally we create the slope map, it requires two steps, first create the slope map and then colour it.
+# Color Relief
+gdaldem color-relief -co TILED=YES -co COMPRESS=DEFLATE -co PREDICTOR=2 input_dtm_3857.tif ../scripts/color-relief.txt relief.tif
 
-```
+# Slope Map (requires two steps: slope calculation -> color relief)
 gdaldem slope input_dtm_3857.tif output_slope.tif
-
-gdaldem color-relief -co compress=lzw -co predictor=2 output_slope.tif scripts/slope-relief.txt layers/slope.tif
-gdaladdo --config COMPRESS_OVERVIEW JPEG layers/slope.tif
+gdaldem color-relief -co TILED=YES -co COMPRESS=DEFLATE -co PREDICTOR=2 output_slope.tif ../scripts/slope-relief.txt slope.tif
 rm -f output_slope.tif
 ```
 
+### 2. Convert to Cloud Optimized GeoTIFFs (COGs)
+
+Convert all generated rasters to Cloud Optimized GeoTIFFs.
+
+```bash
+parallel gdal_translate {} {.}_cog.tif -of COG -co COMPRESS=DEFLATE -co PREDICTOR=YES -co OVERVIEW_RESAMPLING=CUBIC -co BIGTIFF=YES ::: hillshade.tif relief.tif slope.tif
+parallel mv {.}_cog.tif {} ::: hillshade.tif relief.tif slope.tif
+```
+
 The last layer required to represent the terrain model is the contour layer, which can be created with the `gdal_contour` tool.
-Two values must be set, the name of the column that will contain the altitude values and the interval between the lines, in our case the value is 100 metres
 
-```
-gdal_contour -i 100 -a elev -f GeoJSONSeq input_dtm_3857.tif countour.jsonl
-gzip countour.jsonl
+```bash
+gdal_contour -i 100 -a elev -f GeoJSONSeq input_dtm_3857.tif contour.jsonl
+gzip contour.jsonl
 ```
 
-Now we need to import the output shapefile into PostgreSQL database
+Now import and optimize the contour data. **Subdividing** the lines is essential for 50GB+ datasets to prevent OOM crashes in Mapnik:
 
-```
-ogr2ogr -f PostgreSQL 'PG:' /vsigzip/countour.jsonl.gz -nln contour -a_srs EPSG:3857
+```bash
+# Import
+ogr2ogr -f PostgreSQL 'PG:dbname=gis' /vsigzip/contour.jsonl.gz -nln contour_raw -a_srs EPSG:3857
+
+# Optimize: Subdivide large lines, add major levels, and index
+psql -d gis -f scripts/optimize_contours.sql
 ```
 
 ## Custom index
 
-Custom indexes are required for rendering performance and are essential for each databases.
+Custom indexes are required for rendering performance and are essential for large databases.
 
-~~~
+```bash
 psql -d gis -f scripts/indexes.sql
-~~~
+```

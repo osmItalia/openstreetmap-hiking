@@ -1,5 +1,2 @@
-*.tif
-*.shp
-*.shx
-*.dbf
-*.prj
+*
+!.gitignore

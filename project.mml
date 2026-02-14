@@ -182,24 +182,18 @@ Layer:
     properties:
       minzoom: 5
   - id: contour
+    minzoom: 14
     Datasource:
         <<: *osm2pgsql
-        table: (SELECT
-                 wkb_geometry
-                 from contour
-                 where elev::numeric % 500. != 0
-                ) AS contour
+        table: (SELECT ogc_fid, wkb_geometry FROM contour WHERE major_level = 0) AS contour
         geometry_field: wkb_geometry
     geometry: linestring
     <<: *extents
   - id: contour-major
+    minzoom: 12
     Datasource: 
         <<: *osm2pgsql
-        table: (SELECT
-                 wkb_geometry   
-                 from contour
-                 where elev::numeric % 500. = 0
-               ) AS contour_major
+        table: (SELECT ogc_fid, wkb_geometry FROM contour WHERE major_level = 1) AS contour_major
         geometry_field: wkb_geometry
     geometry: linestring
     <<: *extents
